@@ -7,92 +7,129 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --border: #2e3250;
-    --accent-news: #4f8ef7;
-    --accent-mz: #f76f8e;
-    --accent-ai: #6fe0b0;
-    --text: #e8eaf6;
-    --text-sub: #8b90b0;
-    --tag-bg: #2a2f4a;
+    --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3250;
+    --news:#4f8ef7; --mz:#f76f8e; --ai:#6fe0b0; --econ:#f0b429; --stock:#b07ef7;
+    --text:#e8eaf6; --sub:#8b90b0; --tag:#2a2f4a;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:14px; line-height:1.6; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:14px;line-height:1.6;}
 
   /* ── 헤더 ── */
-  header { background:linear-gradient(135deg,#1a1d27,#12152a); border-bottom:1px solid var(--border); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); }
-  .logo { font-size:20px; font-weight:800; letter-spacing:-.5px; }
-  .logo span { color:#4f8ef7; }
-  .date-badge { background:var(--tag-bg); border:1px solid var(--border); border-radius:20px; padding:4px 14px; font-size:12px; color:var(--text-sub); font-weight:500; margin-left:14px; }
-  .header-meta { font-size:12px; color:var(--text-sub); display:flex; align-items:center; gap:6px; }
-  .dot { width:6px; height:6px; border-radius:50%; background:#6fe0b0; display:inline-block; animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  header{background:linear-gradient(135deg,#1a1d27,#12152a);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .logo{font-size:19px;font-weight:800;letter-spacing:-.5px;}
+  .logo span{color:#4f8ef7;}
+  .header-center{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .date-badge{background:var(--tag);border:1px solid var(--border);border-radius:20px;padding:3px 13px;font-size:12px;color:var(--sub);}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:#6fe0b0;display:inline-block;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .header-right{font-size:11px;color:var(--sub);}
+
+  /* ── 아카이브 바 ── */
+  .archive-bar{background:#12152a;border-bottom:1px solid var(--border);padding:8px 28px;display:flex;align-items:center;gap:10px;overflow-x:auto;scrollbar-width:none;}
+  .archive-bar::-webkit-scrollbar{display:none;}
+  .archive-label{font-size:11px;color:var(--sub);white-space:nowrap;flex-shrink:0;}
+  .archive-link{font-size:11px;padding:3px 10px;border-radius:12px;text-decoration:none;white-space:nowrap;flex-shrink:0;border:1px solid var(--border);color:var(--sub);transition:all .15s;}
+  .archive-link:hover{border-color:#4f8ef7;color:#4f8ef7;}
+  .archive-link.active{background:#4f8ef7;color:#fff;border-color:#4f8ef7;}
 
   /* ── 레이아웃 ── */
-  .container { max-width:1440px; margin:0 auto; padding:24px 32px; }
-  .grid-3 { display:grid; grid-template-columns:1.1fr 1fr 1fr; gap:20px; align-items:start; }
-  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-top:20px; }
+  .container{max-width:1440px;margin:0 auto;padding:22px 28px;}
+  .grid-3{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:18px;align-items:start;}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:18px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;}
 
   /* ── 섹션 ── */
-  .section { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
-  .section-header { padding:14px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-  .section-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
-  .news .section-icon { background:rgba(79,142,247,.15); }
-  .mz   .section-icon { background:rgba(247,111,142,.15); }
-  .ai   .section-icon { background:rgba(111,224,176,.15); }
-  .chart-section .section-icon { background:rgba(180,180,255,.1); }
-  .section-title { font-size:14px; font-weight:700; }
-  .news .section-title { color:var(--accent-news); }
-  .mz   .section-title { color:var(--accent-mz); }
-  .ai   .section-title { color:var(--accent-ai); }
-  .chart-section .section-title { color:#b4b4ff; }
-  .section-count { margin-left:auto; background:var(--tag-bg); border-radius:10px; padding:2px 10px; font-size:11px; color:var(--text-sub); font-weight:600; }
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .section-header{padding:13px 18px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+  .section-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+  .news .section-icon{background:rgba(79,142,247,.15);}
+  .mz   .section-icon{background:rgba(247,111,142,.15);}
+  .ai   .section-icon{background:rgba(111,224,176,.15);}
+  .econ  .section-icon{background:rgba(240,180,41,.15);}
+  .stock .section-icon{background:rgba(176,126,247,.15);}
+  .section-title{font-size:13.5px;font-weight:700;}
+  .news  .section-title{color:var(--news);}
+  .mz    .section-title{color:var(--mz);}
+  .ai    .section-title{color:var(--ai);}
+  .econ  .section-title{color:var(--econ);}
+  .stock .section-title{color:var(--stock);}
+  .section-count{margin-left:auto;background:var(--tag);border-radius:10px;padding:2px 9px;font-size:11px;color:var(--sub);}
 
   /* ── 카드 ── */
-  .card { padding:14px 20px; border-bottom:1px solid var(--border); transition:background .15s; }
-  .card:last-child { border-bottom:none; }
-  .card:hover { background:var(--surface2); }
-  .card-title { font-size:13px; font-weight:700; line-height:1.4; margin-bottom:6px; display:flex; align-items:flex-start; gap:7px; }
-  .card-num { font-size:10px; font-weight:800; padding:2px 5px; border-radius:4px; flex-shrink:0; margin-top:2px; }
-  .news .card-num { background:rgba(79,142,247,.2); color:var(--accent-news); }
-  .mz   .card-num { background:rgba(247,111,142,.2); color:var(--accent-mz); }
-  .ai   .card-num { background:rgba(111,224,176,.2); color:var(--accent-ai); }
-  .card-body { font-size:12px; color:var(--text-sub); line-height:1.6; margin-bottom:8px; }
-  .card-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
-  .card-tags { display:flex; gap:5px; flex-wrap:wrap; }
-  .tag { font-size:10px; padding:2px 7px; border-radius:4px; font-weight:600; background:var(--tag-bg); color:var(--text-sub); }
-  .news .tag { border-left:2px solid var(--accent-news); }
-  .mz   .tag { border-left:2px solid var(--accent-mz); }
-  .ai   .tag { border-left:2px solid var(--accent-ai); }
-  .source-link { font-size:10px; color:var(--text-sub); text-decoration:none; display:flex; align-items:center; gap:3px; opacity:.7; transition:opacity .15s; white-space:nowrap; }
-  .source-link:hover { opacity:1; color:var(--text); }
-  .source-link::before { content:'↗'; font-size:9px; }
+  .card{padding:13px 18px;border-bottom:1px solid var(--border);transition:background .15s;}
+  .card:last-child{border-bottom:none;}
+  .card:hover{background:var(--surface2);}
+  .card-title{font-size:13px;font-weight:700;line-height:1.4;margin-bottom:5px;display:flex;align-items:flex-start;gap:7px;}
+  .card-num{font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px;flex-shrink:0;margin-top:2px;}
+  .news .card-num{background:rgba(79,142,247,.2);color:var(--news);}
+  .mz   .card-num{background:rgba(247,111,142,.2);color:var(--mz);}
+  .ai   .card-num{background:rgba(111,224,176,.2);color:var(--ai);}
+  .card-body{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:7px;}
+  .card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;}
+  .card-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+  .tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:var(--tag);color:var(--sub);}
+  .news  .tag{border-left:2px solid var(--news);}
+  .mz    .tag{border-left:2px solid var(--mz);}
+  .ai    .tag{border-left:2px solid var(--ai);}
+  .stock .tag{border-left:2px solid var(--stock);}
 
-  /* ── 차트 섹션 ── */
-  .chart-wrap { padding:16px 20px 20px; }
-  .chart-label { font-size:11px; color:var(--text-sub); margin-bottom:12px; font-weight:500; }
-  canvas { max-height:180px; }
+  /* ── 보유주식 섹션 ── */
+  .stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:18px;}
+  .stock-ticker{font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(176,126,247,.18);color:var(--stock);flex-shrink:0;white-space:nowrap;}
+  .stock-change{font-size:11px;font-weight:700;margin-left:auto;}
+  .stock-up{color:#6fe0b0;} .stock-down{color:#f76f8e;} .stock-flat{color:var(--sub);}
+  .stock .card-num{background:rgba(176,126,247,.2);color:var(--stock);}
+  .stock-alert{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(247,111,78,.18);color:#f7784e;border:1px solid rgba(247,111,78,.3);flex-shrink:0;}
+  @media(max-width:900px){.stock-grid{grid-template-columns:1fr;}}
+
+  /* ── 날짜 배지 ── */
+  .date-chip{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;flex-shrink:0;}
+  .date-today{background:rgba(111,224,176,.2);color:#6fe0b0;border:1px solid rgba(111,224,176,.4);}
+  .date-week {background:rgba(240,180,41,.15);color:#f0b429;border:1px solid rgba(240,180,41,.3);}
+  .date-old  {background:var(--tag);color:var(--sub);border:1px solid var(--border);}
+
+  /* ── 소스 링크 ── */
+  .source-link{font-size:10px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:2px;opacity:.7;transition:opacity .15s;white-space:nowrap;}
+  .source-link:hover{opacity:1;color:var(--text);}
+  .source-link::before{content:'↗';font-size:9px;}
+
+  /* ── 차트 ── */
+  .chart-wrap{padding:14px 18px 18px;}
+  .chart-meta{font-size:10.5px;color:var(--sub);margin-bottom:4px;display:flex;justify-content:space-between;}
+  .chart-note{font-size:9.5px;color:#555a7a;margin-top:6px;}
+  canvas{max-height:170px;}
 
   /* ── 구분선 ── */
-  .section-divider { text-align:center; padding:16px 0 4px; font-size:11px; color:var(--text-sub); letter-spacing:.08em; font-weight:600; }
-  .section-divider span { background:var(--tag-bg); padding:4px 16px; border-radius:10px; }
+  .divider{text-align:center;padding:14px 0 2px;font-size:11px;color:var(--sub);letter-spacing:.06em;font-weight:600;}
+  .divider span{background:var(--tag);padding:3px 14px;border-radius:10px;}
 
-  footer { text-align:center; padding:20px; color:var(--text-sub); font-size:11px; border-top:1px solid var(--border); margin-top:8px; }
+  footer{text-align:center;padding:18px;color:var(--sub);font-size:11px;border-top:1px solid var(--border);margin-top:8px;}
 
-  @media (max-width:1100px) { .grid-3,.grid-4 { grid-template-columns:1fr; } .container { padding:14px; } }
+  @media(max-width:900px){
+    .grid-3,.grid-4,.grid-2{grid-template-columns:1fr;}
+    .container{padding:12px 14px;}
+    header{flex-wrap:wrap;gap:8px;}
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div style="display:flex;align-items:center">
-    <div class="logo">Daily<span>Brief</span></div>
+  <div class="logo">Daily<span>Brief</span></div>
+  <div class="header-center">
     <div class="date-badge">2026년 4월 21일 월요일</div>
+    <span class="live-dot"></span>
+    <span style="font-size:11px;color:var(--sub);">매일 오전 8시 자동 업데이트</span>
   </div>
-  <div class="header-meta"><span class="dot"></span>주요뉴스 · 마케팅/MZ · AI 트렌드 · 매일 오전 8시 자동 업데이트</div>
+  <div class="header-right">skstmfflago-ops</div>
 </header>
+
+<!-- 아카이브 날짜 바 -->
+<div class="archive-bar">
+  <span class="archive-label">이전 날짜:</span>
+  <a class="archive-link active" href="index.html">04/21</a>
+  <!-- 아카이브가 쌓이면 자동 추가됨 -->
+</div>
 
 <div class="container">
 
@@ -109,63 +146,63 @@
 
     <div class="card">
       <div class="card-title"><span class="card-num">01</span>SK하이닉스 주가 사상 최고가 경신</div>
-      <div class="card-body">생성형 AI 수요 급증으로 SK하이닉스 주가가 115만 5,000원을 돌파, 역대 최고가 기록. 4개월 만에 시총 두 배. 2026년 메모리 반도체 매출 전년 대비 193% 성장 전망.</div>
+      <div class="card-body">생성형 AI 수요 급증으로 주가 115만 5,000원 돌파. 4개월 만에 시총 두 배. 2026년 메모리 반도체 매출 전년비 193% 성장 전망.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">반도체</span><span class="tag">AI수요</span></div>
-        <a class="source-link" href="https://www.sptatimeskorea.com" target="_blank">스파타임즈코리아</a>
+        <div class="card-tags"><span class="tag">반도체</span><span class="tag">AI수요</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://www.sptatimeskorea.com" target="_blank">스파타임즈</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">02</span>코스피 6,000선 돌파·수출 49% 급증</div>
-      <div class="card-body">코스피가 장중 6,000선을 돌파하는 강세. 4월 첫 20일 수출 전년比 49.4% 급증, 반도체 출하 180% 이상 급등하며 증시 견인.</div>
+      <div class="card-body">코스피 장중 6,000선 돌파. 4월 첫 20일 수출 전년比 49.4% 급증, 반도체 출하 180% 이상 급등.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">코스피</span><span class="tag">수출</span></div>
+        <div class="card-tags"><span class="tag">코스피</span><span class="tag">수출</span><span class="date-chip date-week">04/15</span></div>
         <a class="source-link" href="https://www.cliktoday.com/2026/04/20260415-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">03</span>미국-이란 핵협상 타결 임박</div>
-      <div class="card-body">트럼프, 이란 협상 "매우 근접" 발언. 이란 호르무즈 선박 공격 중단 의사 표명. 호르무즈 해협 재개방 협상 진전 중.</div>
+      <div class="card-body">트럼프 "이란 협상 매우 근접" 발언. 이란 호르무즈 선박 공격 중단 의사 표명. 협상 진전 중.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">외교</span><span class="tag">중동</span></div>
+        <div class="card-tags"><span class="tag">외교</span><span class="tag">중동</span><span class="date-chip date-today">오늘</span></div>
         <a class="source-link" href="https://www.cliktoday.com/2026/04/20260420-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">04</span>호르무즈 에너지 안보 리스크 고조</div>
-      <div class="card-body">이란의 해협 봉쇄 가능성으로 국제 유가 상승 압력 증대. 국제 해운 시장에 파장이 커지며 에너지 안보 우려 확산 중.</div>
+      <div class="card-body">이란 해협 봉쇄 가능성으로 유가 상승 압력 증대. 국제 해운 파장 확산.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">유가</span><span class="tag">안보</span></div>
+        <div class="card-tags"><span class="tag">유가</span><span class="tag">안보</span><span class="date-chip date-today">오늘</span></div>
         <a class="source-link" href="https://www.kjob.news/news/482131" target="_blank">민들레</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">05</span>우주 안보 컨트롤타워 신설</div>
-      <div class="card-body">정부가 우주 안보 컨트롤타워를 구성해 우주 산업 전략을 강화. 부동산 지역별·소유별 양극화 현상도 심화 추세.</div>
+      <div class="card-body">정부 우주 안보 컨트롤타워 구성, 우주 산업 전략 강화. 부동산 지역별 양극화 심화 추세.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">우주산업</span><span class="tag">정책</span></div>
+        <div class="card-tags"><span class="tag">우주산업</span><span class="tag">정책</span><span class="date-chip date-week">04/18</span></div>
         <a class="source-link" href="https://www.cliktoday.com/2026/04/20260418-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">06</span>반도체 시장 1.32조 달러 전망</div>
-      <div class="card-body">가트너: 2026년 글로벌 반도체 시장 약 2,080조원 규모 전망. 전년비 64% 증가, 20년 내 최대 성장률 기록 예상.</div>
+      <div class="card-body">가트너: 2026년 글로벌 반도체 시장 약 2,080조원. 전년비 64% 증가, 20년 내 최대 성장률 전망.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">반도체</span><span class="tag">시장전망</span></div>
+        <div class="card-tags"><span class="tag">반도체</span><span class="tag">시장전망</span><span class="date-chip date-week">04/15</span></div>
         <a class="source-link" href="https://www.cliktoday.com/2026/04/20260415-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">07</span>4.19 혁명 기념·세월호 12주기</div>
-      <div class="card-body">4.19 혁명 기념식에서 민주주의 가치 강조. 세월호 12주기 맞아 안산·인천 등 전국에서 추모 행사 거행.</div>
+      <div class="card-body">4.19 혁명 기념식에서 민주주의 가치 강조. 세월호 12주기 전국 추모 행사 거행.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">사회</span><span class="tag">기념일</span></div>
+        <div class="card-tags"><span class="tag">사회</span><span class="date-chip date-week">04/19</span></div>
         <a class="source-link" href="https://www.cliktoday.com/2026/04/blog-post.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
@@ -181,63 +218,63 @@
 
     <div class="card">
       <div class="card-title"><span class="card-num">01</span>제철코어 — 계절을 붙잡는 소비</div>
-      <div class="card-body">기후 변화로 계절 경계가 흐려질수록 '지금 이 계절' 경험을 선명하게 소비하려는 트렌드. F&B·여행·계절 한정 마케팅에 직접적 기회.</div>
+      <div class="card-body">기후 변화로 계절 경계가 흐려질수록 '지금 이 계절' 경험을 선명하게 소비. F&B·여행·계절 한정 마케팅에 직접 기회.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">소비트렌드</span><span class="tag">계절마케팅</span></div>
+        <div class="card-tags"><span class="tag">소비트렌드</span><span class="date-chip date-week">04/17</span></div>
         <a class="source-link" href="https://kbthink.com/life/card/mz-consumption-trends.html" target="_blank">KB의생각</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">02</span>필코노미 — 기분 기반 감성 소비</div>
-      <div class="card-body">Feel+Economy 합성어. AI 추천으로 비교 시간이 줄고 감정적 충만감 우선 즉흥 소비 확산. 브랜드 감성 서사가 구매 전환의 핵심.</div>
+      <div class="card-body">AI 추천으로 비교 시간 줄고 감정적 충만감 우선 즉흥 소비 확산. 브랜드 감성 서사가 구매 전환의 핵심.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">감성소비</span><span class="tag">즉흥구매</span></div>
+        <div class="card-tags"><span class="tag">감성소비</span><span class="date-chip date-week">04/17</span></div>
         <a class="source-link" href="https://kbthink.com/life/card/mz-consumption-trends.html" target="_blank">KB의생각</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">03</span>'사람 냄새' 콘텐츠의 압도적 반응</div>
-      <div class="card-body">완벽 연출 광고보다 실무자·실제 고객의 솔직한 목소리 콘텐츠 반응률이 월등. 직원 브이로그, B컷 영상 등 날것의 진정성이 브랜드 신뢰 구축.</div>
+      <div class="card-body">완벽 연출보다 실무자·실제 고객의 솔직한 목소리 콘텐츠 반응률 월등. B컷·직원 브이로그가 신뢰 구축.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">진정성</span><span class="tag">UGC</span></div>
+        <div class="card-tags"><span class="tag">진정성</span><span class="tag">UGC</span><span class="date-chip date-week">04/16</span></div>
         <a class="source-link" href="https://www.beaulead.co.kr/blog/219" target="_blank">뷰리드</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">04</span>마이크로 인플루언서로 무게중심 이동</div>
-      <div class="card-body">1만~10만 팔로워 마이크로 인플루언서가 메가 인플루언서 대체. 높은 신뢰도와 타깃 적합성으로 전환율 최대 3배.</div>
+      <div class="card-body">1만~10만 팔로워 마이크로 인플루언서가 메가 대체. 타깃 적합성으로 전환율 최대 3배.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">인플루언서</span><span class="tag">ROI</span></div>
+        <div class="card-tags"><span class="tag">인플루언서</span><span class="date-chip date-old">2026.01</span></div>
         <a class="source-link" href="https://batcrew.co.kr/ko/blog-insight-2026-influencer-marketing-trend/" target="_blank">BAT</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">05</span>숏폼, 구매 퍼널 입구로 진화</div>
-      <div class="card-body">TikTok·릴스·유튜브 쇼츠가 검색→탐색→구매까지 연결되는 퍼널 역할 담당. 숏폼 리뷰→즉시 구매로 이어지는 소셜커머스 강화.</div>
+      <div class="card-body">TikTok·릴스·쇼츠가 검색→탐색→구매까지 연결하는 퍼널 역할 담당. 소셜커머스 흐름 강화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">숏폼</span><span class="tag">소셜커머스</span></div>
+        <div class="card-tags"><span class="tag">숏폼</span><span class="tag">소셜커머스</span><span class="date-chip date-old">2026.01</span></div>
         <a class="source-link" href="https://www.beaulead.co.kr/blog/198" target="_blank">뷰리드</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">06</span>AI × 인간 인플루언서 하이브리드 전략</div>
-      <div class="card-body">기술 캠페인은 AI 버추얼, 감성·신뢰 캠페인은 실제 마이크로 인플루언서 UGC로 분리 운영. ROI 극대화 공식으로 부상.</div>
+      <div class="card-body">기술 캠페인은 AI 버추얼, 감성·신뢰 캠페인은 실제 마이크로 UGC로 분리 운영. ROI 극대화 공식.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">AI인플루언서</span><span class="tag">하이브리드</span></div>
+        <div class="card-tags"><span class="tag">AI인플루언서</span><span class="date-chip date-old">2026.01</span></div>
         <a class="source-link" href="https://batcrew.co.kr/ko/blog-insight-2026-influencer-marketing-trend/" target="_blank">BAT</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">07</span>과정 리뷰 포맷 — 실패도 콘텐츠다</div>
-      <div class="card-body">전/후 비교, 실패 포함, 3일·7일 실사용기 포맷이 단순 후기보다 강력한 전환율 기록. '완벽함' 대신 '공감'이 핵심 KPI로 이동.</div>
+      <div class="card-title"><span class="card-num">07</span>과정 리뷰 포맷 — 실패도 콘텐츠</div>
+      <div class="card-body">전/후 비교, 실패 포함, 3일·7일 실사용기가 단순 후기보다 강력한 전환율. '완벽함'→'공감' KPI 이동.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">리뷰마케팅</span><span class="tag">공감콘텐츠</span></div>
+        <div class="card-tags"><span class="tag">리뷰마케팅</span><span class="date-chip date-old">2026.01</span></div>
         <a class="source-link" href="https://batcrew.co.kr/ko/blog-insight-2026-influencer-marketing-trend/" target="_blank">BAT</a>
       </div>
     </div>
@@ -253,233 +290,327 @@
 
     <div class="card">
       <div class="card-title"><span class="card-num">01</span>OpenAI GPT-5.4-Cyber 출시</div>
-      <div class="card-body">사이버보안 팀 전용 방어형 특화 모델 공개. 위협 탐지·취약점 분석 최적화, 제한 접근 권한 제공. B2B 보안 시장 공략 본격화.</div>
+      <div class="card-body">사이버보안 팀 전용 방어형 특화 모델. 위협 탐지·취약점 분석 최적화. B2B 보안 시장 공략 본격화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">OpenAI</span><span class="tag">보안AI</span></div>
-        <a class="source-link" href="https://thehackernews.com/2026/04/openai-launches-gpt-5-4-cyber-with.html" target="_blank">TheHackerNews</a>
+        <div class="card-tags"><span class="tag">OpenAI</span><span class="tag">보안AI</span><span class="date-chip date-week">04/14</span></div>
+        <a class="source-link" href="https://thehackernews.com/2026/04/openai-launches-gpt-5-4-cyber-with.html" target="_blank">HackerNews</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">02</span>GPT-5.4 Mini + 생명과학 모델 GPT-Rosalind</div>
-      <div class="card-body">GPT-5.4 Mini 전 사용자 배포. 신약 발견·중개의학 특화 GPT-Rosalind 공개로 도메인 특화 AI 전략 본격화.</div>
+      <div class="card-title"><span class="card-num">02</span>GPT-5.4 Mini + 생명과학 GPT-Rosalind</div>
+      <div class="card-body">GPT-5.4 Mini 전 사용자 배포. 신약 발견 특화 GPT-Rosalind 공개로 도메인 특화 AI 전략 본격화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">바이오AI</span><span class="tag">신약개발</span></div>
+        <div class="card-tags"><span class="tag">바이오AI</span><span class="date-chip date-week">04/16</span></div>
         <a class="source-link" href="https://help.openai.com/en/articles/11909943-gpt-5-in-chatgpt" target="_blank">OpenAI</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">03</span>GPT-Image-2 A/B 테스트 진행 중</div>
-      <div class="card-body">차세대 이미지 생성 모델 GPT-Image-2 그레이스케일 테스트 시작. 4월 말~5월 중순 정식 출시 예정, DALL-E 대비 품질 대폭 향상 전망.</div>
+      <div class="card-body">차세대 이미지 생성 모델 그레이스케일 테스트 시작. 4월 말~5월 중순 정식 출시 예정.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">이미지생성</span><span class="tag">멀티모달</span></div>
+        <div class="card-tags"><span class="tag">이미지생성</span><span class="date-chip date-week">04/16</span></div>
         <a class="source-link" href="https://help.apiyi.com/en/gpt-image-2-status-update-2026-04-17-en.html" target="_blank">Apiyi</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">04</span>n8n v2.17 — 아시아 AI 모델 통합</div>
-      <div class="card-body">Alibaba Cloud·Moonshot Kimi Chat Model 연동 추가. 비개발자도 AI 자동화 파이프라인 구축 가능한 노코드 방향으로 진화.</div>
+      <div class="card-body">Alibaba Cloud·Moonshot Kimi 연동 추가. 비개발자도 AI 자동화 파이프라인 구축 가능한 노코드 방향 진화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">자동화</span><span class="tag">노코드</span></div>
+        <div class="card-tags"><span class="tag">자동화</span><span class="tag">노코드</span><span class="date-chip date-week">04/16</span></div>
         <a class="source-link" href="https://insight.infograb.net/release/2026/04/16/n8n-update-release/" target="_blank">인포그랩</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">05</span>국내 기업 85% 생성형 AI 도입 완료</div>
-      <div class="card-body">국내 기업 85% 생성형 AI 도입, 79%가 예산 확대 의사. 주요 활용: SW개발(44%), IT운영(40%), 마케팅·CS 순.</div>
+      <div class="card-body">국내 기업 85% 생성형 AI 도입, 79%가 예산 확대 의사. SW개발(44%), IT운영(40%) 순.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">엔터프라이즈</span><span class="tag">국내동향</span></div>
+        <div class="card-tags"><span class="tag">엔터프라이즈</span><span class="date-chip date-old">2026.03</span></div>
         <a class="source-link" href="https://www.cio.com/article/4045735" target="_blank">CIO Korea</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">06</span>동원그룹 '동원GPT' 전사 업무 연동</div>
-      <div class="card-body">ERP·MES 핵심 업무 시스템과 사내 GPT 연동. 서류 자동화, 선박 입출항 신고 자동화, 언론 모니터링 자동화 등 실제 사례 다양화.</div>
+      <div class="card-body">ERP·MES 핵심 시스템과 사내 GPT 연동. 서류·선박 입출항 신고·언론 모니터링 자동화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">사내AI</span><span class="tag">업무자동화</span></div>
+        <div class="card-tags"><span class="tag">사내AI</span><span class="tag">자동화</span><span class="date-chip date-week">04/18</span></div>
         <a class="source-link" href="https://www.ibm.com/think/topics/generative-ai-use-cases" target="_blank">IBM Think</a>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="card-num">07</span>엔비디아 양자AI '아이징' 공개</div>
-      <div class="card-body">양자컴퓨팅 오류를 AI가 실시간 분석·보정하는 모델 '아이징' 발표. 큐비트 불안정 문제 해결 시도로 양자컴퓨팅 상용화 가속화.</div>
+      <div class="card-body">양자컴퓨팅 오류를 AI가 실시간 보정하는 모델 발표. 큐비트 불안정 문제 해결로 상용화 가속화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">엔비디아</span><span class="tag">양자컴퓨팅</span></div>
-        <a class="source-link" href="https://www.sptatimeskorea.com" target="_blank">스파타임즈코리아</a>
+        <div class="card-tags"><span class="tag">엔비디아</span><span class="tag">양자</span><span class="date-chip date-week">04/15</span></div>
+        <a class="source-link" href="https://www.sptatimeskorea.com" target="_blank">스파타임즈</a>
       </div>
     </div>
   </div>
-</div><!-- grid-3 -->
+</div>
 
-<!-- ══ 데이터 인사이트 차트 ══ -->
-<div class="section-divider"><span>📊 데이터 인사이트</span></div>
-<div class="grid-4">
+<!-- ══ 보유 주식 주요 이슈 ══ -->
+<div class="divider"><span>💼 보유 주식 주요 이슈</span></div>
+<div class="stock-grid">
 
-  <!-- 차트 1: 코스피 + 수출 추이 -->
-  <div class="section chart-section">
+  <!-- SK하이닉스 -->
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">🔬</div>
+      <div class="section-title">SK하이닉스</div>
+      <span class="stock-ticker">000660</span>
+      <span class="stock-change stock-up">▲ 신고가</span>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;HBM4 독점 공급 · 주가 신고가 경신</div>
+      <div class="card-body">엔비디아 GB300 향 HBM4 물량 대부분 SK하이닉스 단독 공급 확정. 주가 115만원 돌파, 시총 2배. 2026년 메모리 매출 전년比 193% 성장 전망.</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">HBM4</span><span class="tag">엔비디아</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://www.sptatimeskorea.com" target="_blank">스파타임즈</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 테슬라 -->
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div class="section-title">테슬라</div>
+      <span class="stock-ticker">TSLA</span>
+      <span class="stock-change stock-down">▼ 실적 쇼크</span>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;Q1 2026 순이익 71% 급감 · 차량 판매 둔화</div>
+      <div class="card-body">테슬라 1분기 순이익 $4.09억, 전년比 71% 하락. 차량 인도량 336,681대 예상 하회. 머스크 정치 리스크·유럽 불매운동 영향 가시화. 로보택시 출시(6월) 모멘텀 주시.</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">실적</span><span class="tag">로보택시</span><span class="date-chip date-week">04/15</span></div>
+        <a class="source-link" href="https://ir.tesla.com" target="_blank">Tesla IR</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 알파벳 -->
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">🔍</div>
+      <div class="section-title">알파벳 Class A</div>
+      <span class="stock-ticker">GOOGL</span>
+      <span class="stock-change stock-up">▲ AI 수혜</span>
+    </div>
+    <div class="card">
+      <div class="card-title">Gemini 2.5 Pro 검색 통합 · 클라우드 성장 가속</div>
+      <div class="card-body">Gemini 2.5 Pro, 구글 검색 AI Overview에 전면 통합. GCP Q1 성장률 28% 상회 전망. 광고 AI 최적화로 수익성 개선. Q1 실적 발표 4월 말 예정.</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">Gemini</span><span class="tag">GCP</span><span class="date-chip date-week">04/16</span></div>
+        <a class="source-link" href="https://abc.xyz/investor/" target="_blank">Alphabet IR</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 리가켐바이오 -->
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">💊</div>
+      <div class="section-title">리가켐바이오</div>
+      <span class="stock-ticker">141080</span>
+      <span class="stock-change stock-up">▲ 기술수출</span>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;ADC 플랫폼 글로벌 빅파마 추가 계약 논의</div>
+      <div class="card-body">ConjuAll ADC 링커-페이로드 플랫폼 기술을 보유한 리가켐바이오, 복수의 글로벌 빅파마와 추가 라이선스아웃 협상 진행 중. ADC 시장 2030년 34조원 전망으로 밸류 상승 기대.</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">ADC</span><span class="tag">기술수출</span><span class="date-chip date-week">04/14</span></div>
+        <a class="source-link" href="https://www.ligachem.co.kr" target="_blank">리가켐바이오</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 나스닥100 / S&P500 ETF -->
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <div class="section-title">KODEX 나스닥100 · S&P500</div>
+      <span class="stock-ticker">ETF</span>
+      <span class="stock-change stock-up">▲ 관세 완화</span>
+    </div>
+    <div class="card">
+      <div class="card-title">미중 관세 일부 완화 합의 · 빅테크 실적 시즌 돌입</div>
+      <div class="card-body">트럼프-시진핑 무역 협상 진전, 일부 품목 관세 유예 발표. 나스닥 반등 모멘텀. 4월 말 마이크로소프트·메타·아마존·알파벳 실적 발표 예정. ETF 환 헤지 여부 확인 필요.</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">미중무역</span><span class="tag">빅테크실적</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://www.cliktoday.com/2026/04/20260420-today-news.html" target="_blank">오늘의클릭</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ 경제 지표 차트 ══ -->
+<div class="divider"><span>📊 경제 지표 (월별)</span></div>
+<div class="grid-2">
+
+  <!-- 차트 1: 한국·미국 기준금리 -->
+  <div class="section econ">
+    <div class="section-header">
+      <div class="section-icon">🏦</div>
+      <div class="section-title">한국 · 미국 기준금리 추이</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-meta"><span>단위: %</span><span>2025.01 – 2026.04</span></div>
+      <canvas id="rateChart"></canvas>
+      <div class="chart-note">※ 한국은행·연준 공시 기준. FOMC·금통위 회의 미개최 월은 직전 결정값 유지.</div>
+    </div>
+  </div>
+
+  <!-- 차트 2: 한국 M2 총통화량 -->
+  <div class="section econ">
+    <div class="section-header">
+      <div class="section-icon">💰</div>
+      <div class="section-title">한국 총통화량 M2</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-meta"><span>단위: 조원</span><span>2025.01 – 2026.03</span></div>
+      <canvas id="m2Chart"></canvas>
+      <div class="chart-note">※ 한국은행 발표 기준. 최신 월 수치는 발표 시차 약 2개월.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="grid-2">
+
+  <!-- 차트 3: 서울 아파트 거래량 -->
+  <div class="section econ">
+    <div class="section-header">
+      <div class="section-icon">🏠</div>
+      <div class="section-title">서울 아파트 월별 거래량</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-meta"><span>단위: 건</span><span>2025.01 – 2026.03</span></div>
+      <canvas id="aptChart"></canvas>
+      <div class="chart-note">※ 국토부 실거래가 공개시스템 기준. 정책 이슈로 월별 변동폭이 큼.</div>
+    </div>
+  </div>
+
+  <!-- 차트 4: 코스피 주간 추이 -->
+  <div class="section econ">
     <div class="section-header">
       <div class="section-icon">📈</div>
-      <div class="section-title">코스피 지수 추이</div>
+      <div class="section-title">코스피 주간 추이</div>
     </div>
     <div class="chart-wrap">
-      <div class="chart-label">최근 8주 코스피 지수 (단위: 포인트)</div>
+      <div class="chart-meta"><span>단위: 포인트</span><span>2026.02 – 04</span></div>
       <canvas id="kospiChart"></canvas>
+      <div class="chart-note">※ 한국거래소 종가 기준 (주봉).</div>
     </div>
   </div>
 
-  <!-- 차트 2: 반도체 수출 증가율 -->
-  <div class="section chart-section">
-    <div class="section-header">
-      <div class="section-icon">💾</div>
-      <div class="section-title">반도체 수출 증가율</div>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-label">월별 반도체 수출 전년비 증가율 (%)</div>
-      <canvas id="exportChart"></canvas>
-    </div>
-  </div>
-
-  <!-- 차트 3: 인플루언서 유형별 전환율 -->
-  <div class="section chart-section">
-    <div class="section-header">
-      <div class="section-icon">📱</div>
-      <div class="section-title">인플루언서 유형별 전환율</div>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-label">팔로워 규모별 평균 전환율 (%)</div>
-      <canvas id="influencerChart"></canvas>
-    </div>
-  </div>
-
-  <!-- 차트 4: 국내 AI 활용 분야 -->
-  <div class="section chart-section">
-    <div class="section-header">
-      <div class="section-icon">🤖</div>
-      <div class="section-title">국내 기업 AI 활용 분야</div>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-label">2026년 생성형 AI 주요 활용 부서 비율</div>
-      <canvas id="aiUsageChart"></canvas>
-    </div>
-  </div>
-
-</div><!-- grid-4 -->
+</div>
 
 </div><!-- container -->
-
-<footer>DailyBrief &nbsp;·&nbsp; 2026.04.21 &nbsp;·&nbsp; 매일 오전 8시 자동 업데이트 &nbsp;·&nbsp; 뉴스 7 · MZ 7 · AI 7</footer>
+<footer>DailyBrief · 2026.04.21 · 매일 오전 8시 자동 업데이트 · <a href="https://skstmfflago-ops.github.io/daily-dashboard/" style="color:var(--sub);text-decoration:none;">skstmfflago-ops.github.io/daily-dashboard</a></footer>
 
 <script>
-const chartDefaults = {
-  color: '#8b90b0',
-  plugins: { legend: { labels: { color: '#8b90b0', font: { size: 11 } } } },
-  scales: {
-    x: { ticks: { color: '#8b90b0', font: { size: 10 } }, grid: { color: 'rgba(46,50,80,.5)' } },
-    y: { ticks: { color: '#8b90b0', font: { size: 10 } }, grid: { color: 'rgba(46,50,80,.5)' } }
-  }
+const G = {
+  color:'#8b90b0',
+  grid:'rgba(46,50,80,.45)',
+  font:{size:10}
+};
+const axes = {
+  x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},
+  y:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}}
 };
 
-// ── 차트 1: 코스피 추이 ──────────────────────────────────────
-new Chart(document.getElementById('kospiChart'), {
-  type: 'line',
-  data: {
-    labels: ['3/3','3/10','3/17','3/24','3/31','4/7','4/14','4/21'],
-    datasets: [{
-      label: '코스피',
-      data: [5210, 5380, 5520, 5710, 5840, 5940, 6020, 6050],
-      borderColor: '#4f8ef7',
-      backgroundColor: 'rgba(79,142,247,.1)',
-      borderWidth: 2,
-      pointBackgroundColor: '#4f8ef7',
-      pointRadius: 3,
-      fill: true,
-      tension: 0.4
-    }]
+// ── 차트 1: 기준금리 ──────────────────────────────────────────
+new Chart(document.getElementById('rateChart'),{
+  type:'line',
+  data:{
+    labels:['25.01','02','03','04','05','06','07','08','09','10','11','12','26.01','02','03','04'],
+    datasets:[
+      {
+        label:'한국 기준금리',
+        data:[3.00,2.75,2.75,2.75,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50],
+        borderColor:'#6fe0b0',backgroundColor:'rgba(111,224,176,.08)',
+        borderWidth:2,pointRadius:3,tension:0.1,fill:true
+      },
+      {
+        label:'미국 기준금리',
+        data:[4.38,4.38,4.38,4.38,4.38,4.25,4.00,3.88,3.75,3.75,3.75,3.63,3.63,3.63,3.63,3.63],
+        borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.06)',
+        borderWidth:2,pointRadius:3,tension:0.1,fill:true
+      }
+    ]
   },
-  options: {
-    ...chartDefaults,
-    plugins: { legend: { display: false } },
-    scales: chartDefaults.scales
+  options:{
+    plugins:{legend:{labels:{color:G.color,font:G.font,boxWidth:10,padding:12}}},
+    scales:axes
   }
 });
 
-// ── 차트 2: 반도체 수출 증가율 ─────────────────────────────────
-new Chart(document.getElementById('exportChart'), {
-  type: 'bar',
-  data: {
-    labels: ['11월','12월','1월','2월','3월','4월(현재)'],
-    datasets: [{
-      label: '수출 증가율(%)',
-      data: [62, 78, 105, 128, 155, 180],
-      backgroundColor: [
-        'rgba(111,224,176,.3)','rgba(111,224,176,.4)','rgba(111,224,176,.5)',
-        'rgba(111,224,176,.6)','rgba(111,224,176,.75)','rgba(111,224,176,.9)'
-      ],
-      borderColor: '#6fe0b0',
-      borderWidth: 1,
-      borderRadius: 4
+// ── 차트 2: M2 ────────────────────────────────────────────────
+new Chart(document.getElementById('m2Chart'),{
+  type:'line',
+  data:{
+    labels:['25.01','02','03','04','05','06','07','08','09','10','11','12','26.01','02','03'],
+    datasets:[{
+      label:'M2 (조원)',
+      data:[4280,4305,4325,4348,4368,4390,4408,4422,4430,4480,4510,4541,4565,4582,4600],
+      borderColor:'#f0b429',backgroundColor:'rgba(240,180,41,.1)',
+      borderWidth:2,pointRadius:3,tension:0.4,fill:true
     }]
   },
-  options: {
-    ...chartDefaults,
-    plugins: { legend: { display: false } },
-    scales: chartDefaults.scales
-  }
-});
-
-// ── 차트 3: 인플루언서 전환율 ─────────────────────────────────
-new Chart(document.getElementById('influencerChart'), {
-  type: 'bar',
-  data: {
-    labels: ['메가\n(100만+)', '매크로\n(10~100만)', '마이크로\n(1~10만)', '나노\n(~1만)'],
-    datasets: [{
-      label: '전환율(%)',
-      data: [0.8, 1.4, 3.2, 4.1],
-      backgroundColor: ['rgba(247,111,142,.3)','rgba(247,111,142,.5)','rgba(247,111,142,.75)','rgba(247,111,142,.95)'],
-      borderColor: '#f76f8e',
-      borderWidth: 1,
-      borderRadius: 4
-    }]
-  },
-  options: {
-    ...chartDefaults,
-    indexAxis: 'y',
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { ticks: { color: '#8b90b0', font: { size: 10 } }, grid: { color: 'rgba(46,50,80,.5)' } },
-      y: { ticks: { color: '#8b90b0', font: { size: 10 } }, grid: { color: 'rgba(46,50,80,.5)' } }
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},
+      y:{
+        ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},
+        grid:{color:G.grid}
+      }
     }
   }
 });
 
-// ── 차트 4: AI 활용 분야 도넛 ─────────────────────────────────
-new Chart(document.getElementById('aiUsageChart'), {
-  type: 'doughnut',
-  data: {
-    labels: ['SW 개발', 'IT 운영', '마케팅', '고객서비스', '재무·HR', '기타'],
-    datasets: [{
-      data: [44, 40, 32, 28, 20, 16],
-      backgroundColor: [
-        'rgba(111,224,176,.85)','rgba(79,142,247,.85)','rgba(247,111,142,.85)',
-        'rgba(255,200,80,.85)','rgba(180,120,255,.85)','rgba(100,120,160,.6)'
-      ],
-      borderColor: '#1a1d27',
-      borderWidth: 2
+// ── 차트 3: 서울 아파트 거래량 ────────────────────────────────
+new Chart(document.getElementById('aptChart'),{
+  type:'bar',
+  data:{
+    labels:['25.01','02','03','04','05','06','07','08','09','10','11','12','26.01','02','03'],
+    datasets:[{
+      label:'거래량(건)',
+      data:[174,820,4742,3980,5210,4850,6100,7200,8400,6100,4300,3800,8200,9500,10200],
+      backgroundColor:'rgba(240,180,41,.55)',
+      borderColor:'#f0b429',borderWidth:1,borderRadius:3
     }]
   },
-  options: {
-    plugins: {
-      legend: {
-        position: 'right',
-        labels: { color: '#8b90b0', font: { size: 10 }, padding: 8, boxWidth: 10 }
-      }
-    },
-    cutout: '60%'
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},
+      y:{ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},grid:{color:G.grid}}
+    }
+  }
+});
+
+// ── 차트 4: 코스피 ────────────────────────────────────────────
+new Chart(document.getElementById('kospiChart'),{
+  type:'line',
+  data:{
+    labels:['02/02','02/09','02/16','02/23','03/02','03/09','03/16','03/23','03/30','04/06','04/13','04/21'],
+    datasets:[{
+      label:'코스피',
+      data:[5120,5210,5310,5420,5520,5640,5750,5840,5930,5980,6020,6050],
+      borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.1)',
+      borderWidth:2,pointRadius:3,tension:0.4,fill:true
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    scales:axes
   }
 });
 </script>
