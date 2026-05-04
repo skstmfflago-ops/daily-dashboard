@@ -3,113 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Dashboard – 2026.05.01</title>
+<title>Daily Dashboard – 2026.05.04</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3250;
-    --news:#4f8ef7; --mz:#f76f8e; --ai:#6fe0b0; --econ:#f0b429; --stock:#b07ef7;
-    --text:#e8eaf6; --sub:#8b90b0; --tag:#2a2f4a;
-  }
+  :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--news:#4f8ef7;--mz:#f76f8e;--ai:#6fe0b0;--econ:#f0b429;--stock:#b07ef7;--text:#e8eaf6;--sub:#8b90b0;--tag:#2a2f4a;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:14px;line-height:1.6;}
-
-  /* ── 헤더 ── */
   header{background:linear-gradient(135deg,#1a1d27,#12152a);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-  .logo{font-size:19px;font-weight:800;letter-spacing:-.5px;}
-  .logo span{color:#4f8ef7;}
+  .logo{font-size:19px;font-weight:800;letter-spacing:-.5px;}.logo span{color:#4f8ef7;}
   .header-center{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .date-badge{background:var(--tag);border:1px solid var(--border);border-radius:20px;padding:3px 13px;font-size:12px;color:var(--sub);}
   .live-dot{width:6px;height:6px;border-radius:50%;background:#6fe0b0;display:inline-block;animation:pulse 2s infinite;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
   .header-right{font-size:11px;color:var(--sub);}
-
-  /* ── 아카이브 바 ── */
   .archive-bar{background:#12152a;border-bottom:1px solid var(--border);padding:8px 28px;display:flex;align-items:center;gap:10px;overflow-x:auto;scrollbar-width:none;}
   .archive-bar::-webkit-scrollbar{display:none;}
   .archive-label{font-size:11px;color:var(--sub);white-space:nowrap;flex-shrink:0;}
   .archive-link{font-size:11px;padding:3px 10px;border-radius:12px;text-decoration:none;white-space:nowrap;flex-shrink:0;border:1px solid var(--border);color:var(--sub);transition:all .15s;}
-  .archive-link:hover{border-color:#4f8ef7;color:#4f8ef7;}
-  .archive-link.active{background:#4f8ef7;color:#fff;border-color:#4f8ef7;}
-
-  /* ── 레이아웃 ── */
+  .archive-link:hover{border-color:#4f8ef7;color:#4f8ef7;}.archive-link.active{background:#4f8ef7;color:#fff;border-color:#4f8ef7;}
   .container{max-width:1440px;margin:0 auto;padding:22px 28px;}
   .grid-3{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:18px;align-items:start;}
-  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:18px;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;}
-
-  /* ── 섹션 ── */
   .section{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
   .section-header{padding:13px 18px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
   .section-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-  .news .section-icon{background:rgba(79,142,247,.15);}
-  .mz   .section-icon{background:rgba(247,111,142,.15);}
-  .ai   .section-icon{background:rgba(111,224,176,.15);}
-  .econ  .section-icon{background:rgba(240,180,41,.15);}
-  .stock .section-icon{background:rgba(176,126,247,.15);}
+  .news .section-icon{background:rgba(79,142,247,.15);}.mz .section-icon{background:rgba(247,111,142,.15);}.ai .section-icon{background:rgba(111,224,176,.15);}.econ .section-icon{background:rgba(240,180,41,.15);}.stock .section-icon{background:rgba(176,126,247,.15);}
   .section-title{font-size:13.5px;font-weight:700;}
-  .news  .section-title{color:var(--news);}
-  .mz    .section-title{color:var(--mz);}
-  .ai    .section-title{color:var(--ai);}
-  .econ  .section-title{color:var(--econ);}
-  .stock .section-title{color:var(--stock);}
+  .news .section-title{color:var(--news);}.mz .section-title{color:var(--mz);}.ai .section-title{color:var(--ai);}.econ .section-title{color:var(--econ);}.stock .section-title{color:var(--stock);}
   .section-count{margin-left:auto;background:var(--tag);border-radius:10px;padding:2px 9px;font-size:11px;color:var(--sub);}
-
-  /* ── 카드 ── */
-  .card{padding:13px 18px;border-bottom:1px solid var(--border);transition:background .15s;}
-  .card:last-child{border-bottom:none;}
-  .card:hover{background:var(--surface2);}
+  .card{padding:13px 18px;border-bottom:1px solid var(--border);transition:background .15s;}.card:last-child{border-bottom:none;}.card:hover{background:var(--surface2);}
   .card-title{font-size:13px;font-weight:700;line-height:1.4;margin-bottom:5px;display:flex;align-items:flex-start;gap:7px;}
   .card-num{font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px;flex-shrink:0;margin-top:2px;}
-  .news .card-num{background:rgba(79,142,247,.2);color:var(--news);}
-  .mz   .card-num{background:rgba(247,111,142,.2);color:var(--mz);}
-  .ai   .card-num{background:rgba(111,224,176,.2);color:var(--ai);}
+  .news .card-num{background:rgba(79,142,247,.2);color:var(--news);}.mz .card-num{background:rgba(247,111,142,.2);color:var(--mz);}.ai .card-num{background:rgba(111,224,176,.2);color:var(--ai);}
   .card-body{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:7px;}
   .card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;}
   .card-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
   .tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:var(--tag);color:var(--sub);}
-  .news  .tag{border-left:2px solid var(--news);}
-  .mz    .tag{border-left:2px solid var(--mz);}
-  .ai    .tag{border-left:2px solid var(--ai);}
-  .stock .tag{border-left:2px solid var(--stock);}
-
-  /* ── 보유주식 섹션 ── */
-  .stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:18px;}
-  .stock-ticker{font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(176,126,247,.18);color:var(--stock);flex-shrink:0;white-space:nowrap;}
-  .stock-change{font-size:11px;font-weight:700;margin-left:auto;}
-  .stock-up{color:#6fe0b0;} .stock-down{color:#f76f8e;} .stock-flat{color:var(--sub);}
-  .stock .card-num{background:rgba(176,126,247,.2);color:var(--stock);}
-  .stock-alert{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(247,111,78,.18);color:#f7784e;border:1px solid rgba(247,111,78,.3);flex-shrink:0;}
-  @media(max-width:900px){.stock-grid{grid-template-columns:1fr;}}
-
-  /* ── 날짜 배지 ── */
+  .news .tag{border-left:2px solid var(--news);}.mz .tag{border-left:2px solid var(--mz);}.ai .tag{border-left:2px solid var(--ai);}.stock .tag{border-left:2px solid var(--stock);}
   .date-chip{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;flex-shrink:0;}
   .date-today{background:rgba(111,224,176,.2);color:#6fe0b0;border:1px solid rgba(111,224,176,.4);}
-  .date-week {background:rgba(240,180,41,.15);color:#f0b429;border:1px solid rgba(240,180,41,.3);}
-  .date-old  {background:var(--tag);color:var(--sub);border:1px solid var(--border);}
-
-  /* ── 소스 링크 ── */
-  .source-link{font-size:10px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:2px;opacity:.7;transition:opacity .15s;white-space:nowrap;}
-  .source-link:hover{opacity:1;color:var(--text);}
-  .source-link::before{content:'↗';font-size:9px;}
-
-  /* ── 차트 ── */
-  .chart-wrap{padding:14px 18px 18px;}
-  .chart-meta{font-size:10.5px;color:var(--sub);margin-bottom:4px;display:flex;justify-content:space-between;}
-  .chart-note{font-size:9.5px;color:#555a7a;margin-top:6px;}
+  .date-week{background:rgba(240,180,41,.15);color:#f0b429;border:1px solid rgba(240,180,41,.3);}
+  .date-old{background:var(--tag);color:var(--sub);border:1px solid var(--border);}
+  .source-link{font-size:10px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:2px;opacity:.7;transition:opacity .15s;white-space:nowrap;}.source-link:hover{opacity:1;color:var(--text);}.source-link::before{content:'↗';font-size:9px;}
+  .chart-wrap{padding:14px 18px 18px;}.chart-meta{font-size:10.5px;color:var(--sub);margin-bottom:4px;display:flex;justify-content:space-between;}.chart-note{font-size:9.5px;color:#555a7a;margin-top:6px;}
   canvas{max-height:170px;}
-
-  /* ── 구분선 ── */
-  .divider{text-align:center;padding:14px 0 2px;font-size:11px;color:var(--sub);letter-spacing:.06em;font-weight:600;}
-  .divider span{background:var(--tag);padding:3px 14px;border-radius:10px;}
-
+  .divider{text-align:center;padding:14px 0 2px;font-size:11px;color:var(--sub);letter-spacing:.06em;font-weight:600;}.divider span{background:var(--tag);padding:3px 14px;border-radius:10px;}
+  .stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:18px;}
+  .stock-ticker{font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(176,126,247,.18);color:var(--stock);flex-shrink:0;white-space:nowrap;}
+  .stock-change{font-size:11px;font-weight:700;margin-left:auto;}.stock-up{color:#6fe0b0;}.stock-down{color:#f76f8e;}.stock-flat{color:var(--sub);}
+  .stock-alert{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(247,111,78,.18);color:#f7784e;border:1px solid rgba(247,111,78,.3);flex-shrink:0;}
   footer{text-align:center;padding:18px;color:var(--sub);font-size:11px;border-top:1px solid var(--border);margin-top:8px;}
-
-  @media(max-width:900px){
-    .grid-3,.grid-4,.grid-2{grid-template-columns:1fr;}
-    .container{padding:12px 14px;}
-    header{flex-wrap:wrap;gap:8px;}
-  }
+  @media(max-width:900px){.grid-3,.grid-2{grid-template-columns:1fr;}.container{padding:12px 14px;}header{flex-wrap:wrap;gap:8px;}.stock-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -117,21 +61,17 @@
 <header>
   <div class="logo">Daily<span>Brief</span></div>
   <div class="header-center">
-    <div class="date-badge">2026년 5월 1일 금요일</div>
+    <div class="date-badge">2026년 5월 4일 월요일</div>
     <span class="live-dot"></span>
     <span style="font-size:11px;color:var(--sub);">매일 오전 6시 자동 업데이트</span>
   </div>
   <div class="header-right">skstmfflago-ops</div>
 </header>
 
-<!-- 아카이브 날짜 바 -->
 <div class="archive-bar">
-  <span class="archive-label">아카이브:</span>
-  <a class="archive-link active" href="index.html">05/01 (오늘)</a>
-  <span class="archive-link" style="opacity:.45;cursor:default;">04/29</span>
-  <span class="archive-link" style="opacity:.45;cursor:default;">04/28</span>
-  <span class="archive-link" style="opacity:.45;cursor:default;">04/27</span>
-  <span class="archive-link" style="opacity:.45;cursor:default;">04/24</span>
+  <span class="archive-label">이전 날짜:</span>
+  <a class="archive-link active" href="index.html">05/04</a>
+  <a class="archive-link" href="archive/2026-04-21.html">04/21</a>
 </div>
 
 <div class="container">
@@ -148,65 +88,65 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">01</span>빅테크 어닝서프 3연속 — 알파벳 +10%·MS +23%·메타 컨센 상회</div>
-      <div class="card-body">알파벳 Q1: 매출 $109.9B(컨센 상회)·EPS $5.11(컨센 $2.63 대폭 상회)·Cloud +63%·주가 +10%. MS Q1: 매출 +18%·순이익 +23%·Azure +29%. 메타: EPS $8.88 컨센 상회. 美 빅테크 3사 동반 어닝서프 → 코스피 반도체·AI 수혜 기대.</div>
+      <div class="card-title"><span class="card-num">01</span>코스피 6,700선 돌파 · 사상 최고치 경신</div>
+      <div class="card-body">코스피가 6,700선을 돌파하며 사상 최고치를 재차 경신. AI·반도체 수요 호황 속 국내 증시 강세 지속. '셀 인 메이' 격언 무력화 여부 주목.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">빅테크</span><span class="tag">어닝서프</span><span class="date-chip date-today">오늘</span></div>
-        <a class="source-link" href="https://www.thepickool.kr/p/ai-22-63" target="_blank">더피쿨</a>
+        <div class="card-tags"><span class="tag">코스피</span><span class="tag">증시</span><span class="date-chip date-week">05/03</span></div>
+        <a class="source-link" href="https://www.cliktoday.com/2026/05/20260503-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">02</span>SK하이닉스 Q1 영업이익 37.6조 — 영업이익률 72%</div>
-      <div class="card-body">1분기 매출 52.6조(+198%), 영업이익 37.6조(+405.5%), 영업이익률 72% 달성. TSMC 수익성마저 앞지른 창사 이래 최대 실적. HBM4·서버D램·eSSD 고부가 제품 판매 확대 효과.</div>
+      <div class="card-title"><span class="card-num">02</span>삼성전자 노조 5월 총파업 돌입</div>
+      <div class="card-body">삼성전자 노조 조합원 3만 7천 명 총파업 돌입. 성과급 산정 기준 투명화·OPI 상한 폐지 요구. 한국 수출 20% 비중 기업인 만큼 반도체 공급망 차질 우려.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">SK하이닉스</span><span class="tag">HBM</span><span class="date-chip date-week">04/23</span></div>
-        <a class="source-link" href="https://news.skhynix.co.kr/q1-2026-business-results/" target="_blank">SK하이닉스</a>
+        <div class="card-tags"><span class="tag">삼성전자</span><span class="tag">파업</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://namu.wiki/w/2026%EB%85%84%20%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90%20%EB%85%B8%EC%A1%B0%20%EC%B4%9D%ED%8C%8C%EC%97%85" target="_blank">나무위키</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">03</span>1분기 GDP 1.7% 성장 — 반도체가 견인</div>
-      <div class="card-body">4월 중순 반도체 수출 183억 달러(26조원대)로 역대 최대. 반도체 단일 업종이 1분기 GDP 성장률 1.7%를 밀어올린 구조. 제조업 쏠림 심화로 산업 균형 우려도 동반.</div>
+      <div class="card-title"><span class="card-num">03</span>중동 긴장 지속 · 유가 100달러 위협</div>
+      <div class="card-body">국지적 중동 긴장이 원유 공급 불안으로 이어져 국제 유가 배럴당 100달러 선 위협. 항공 유류할증료 급등으로 여름 해외여행 수요 위축 예상. 금융위, 해운업계 긴급 지원 발표.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">GDP</span><span class="tag">반도체수출</span><span class="date-chip date-week">04/25</span></div>
-        <a class="source-link" href="https://www.hankyung.com/economy" target="_blank">한국경제</a>
+        <div class="card-tags"><span class="tag">유가</span><span class="tag">중동</span><span class="date-chip date-week">05/03</span></div>
+        <a class="source-link" href="https://www.cliktoday.com/2026/05/20260503-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">04</span>브렌트유 110달러 육박 — 미-이란 핵협상 불발, 유가 3주 최고</div>
-      <div class="card-body">미-이란 핵협상 결렬로 중동 긴장 고조. 브렌트유 배럴당 110달러에 육박하며 3주 만의 최고치. 국제 인플레이션 압력 재점화, 한국은행 물가 시나리오 재검토 가능성. 국내 에너지·물가 상방 압력 확대 우려.</div>
+      <div class="card-title"><span class="card-num">04</span>6.3 지방선거 여야 대진표 확정</div>
+      <div class="card-body">6월 3일 지방선거 30일 앞으로. 국민의힘 경기지사 후보 확정으로 전국 광역단체장 여야 구도 완성. 이재명 대통령 높은 지지율 속 여당 우세, 부산·경남은 접전 예상.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">유가</span><span class="tag">중동</span><span class="date-chip date-week">04/28</span></div>
-        <a class="source-link" href="https://www.cliktoday.com/2026/04/20260428-today-news.html" target="_blank">오늘의클릭</a>
+        <div class="card-tags"><span class="tag">지방선거</span><span class="tag">정치</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://www.newspim.com/news/view/20260503000180" target="_blank">뉴스핌</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">05</span>혼다코리아, 2026년 말 한국 자동차 판매 철수</div>
-      <div class="card-body">혼다코리아가 2026년 말 한국 자동차 판매 사업 종료 공식 발표. 전기차 전환 지연과 점유율 하락 누적. 기존 차량 AS·부품 공급은 유지, 모터사이클 사업은 지속.</div>
+      <div class="card-title"><span class="card-num">05</span>다주택자 양도세 중과 재검토</div>
+      <div class="card-body">정부, 다주택자 양도소득세 중과 재개 및 장기보유특별공제 축소 검토 중. 서울 아파트 거래 및 가격에 미칠 영향 예의주시 필요.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">자동차</span><span class="tag">철수</span><span class="date-chip date-week">04/24</span></div>
-        <a class="source-link" href="https://www.hankyung.com/economy" target="_blank">한국경제</a>
+        <div class="card-tags"><span class="tag">부동산</span><span class="tag">세제</span><span class="date-chip date-week">05/03</span></div>
+        <a class="source-link" href="https://www.cliktoday.com/2026/05/20260503-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">06</span>아스팔트 ㎏당 1,100원 — 건설자재 수급 경고 발령</div>
-      <div class="card-body">정부, 석유 최고가격 4차 고시 어제 발표·오늘 시행. 아스팔트가 2월 700원→4월 1,100원으로 급등. 건설자재 수급 경고 발령으로 건설 원가 압박 가속, 분양가 추가 상승 우려.</div>
+      <div class="card-title"><span class="card-num">06</span>홈플러스 회생계획안 기한 7월로 연장</div>
+      <div class="card-body">서울회생법원, 홈플러스 회생계획안 가결 기한을 5/4 → 7/3으로 2개월 추가 연장. 홈플러스 익스프레스 매각 절차 가시권, 회생 가능성 열려있어.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">원자재</span><span class="tag">건설</span><span class="date-chip date-week">04/24</span></div>
-        <a class="source-link" href="https://www.mt.co.kr/finance/2026/04/24/2026042321015916699" target="_blank">머니투데이</a>
+        <div class="card-tags"><span class="tag">유통</span><span class="tag">기업회생</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://issue.cyberbabarian.com/samsung-strike-may-2026-impact/" target="_blank">21세기이슈</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">07</span>미 연방정부 셧다운 67일 최장 기록 — DHS 급여 위기</div>
-      <div class="card-body">미 연방정부 부분 셧다운이 67일로 역대 최장 기록 경신. 국토안보부(DHS) 급여 지급 위기 공식 경고. 관광·무역 행정 장기 마비로 한국 수출기업 통관 지연 우려 확산.</div>
+      <div class="card-title"><span class="card-num">07</span>맥신 대량생산 기술 세계 최초 개발</div>
+      <div class="card-body">한국과학기술연구원(KIST), 꿈의 신소재 맥신(MXene) 균일 품질 대량생산 기술 세계 최초 개발. 차세대 배터리·전자소자·에너지 저장 분야 적용 기대.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">셧다운</span><span class="tag">미국</span><span class="date-chip date-week">04/24</span></div>
-        <a class="source-link" href="https://www.cliktoday.com/" target="_blank">오늘의클릭</a>
+        <div class="card-tags"><span class="tag">신소재</span><span class="tag">R&D</span><span class="date-chip date-week">05/03</span></div>
+        <a class="source-link" href="https://www.cliktoday.com/2026/05/20260503-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
   </div>
@@ -220,65 +160,65 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">01</span>인스타그램 알고리즘 전면 개편 — '저장·공유' KPI로 이동</div>
-      <div class="card-body">단순 조회수·CTR 중심에서 저장·공유·체류시간 기반으로 평가 기준 전환. 메타 공식 발표 기준 릴스 광고 참여율이 피드 광고 대비 30% 높음. 크리에이티브 KPI 전면 재정비 필요.</div>
+      <div class="card-title"><span class="card-num">01</span>제로클릭 시대 — AI가 검색을 대체</div>
+      <div class="card-body">AI 추천이 소비자 검색·클릭을 대신하는 '제로클릭' 소비 확산. 브랜드가 직접 검색에 노출되지 않아도 AI 추천 채널에 포착돼야 구매 전환 가능.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">인스타그램</span><span class="tag">알고리즘</span><span class="date-chip date-old">2026.01</span></div>
-        <a class="source-link" href="https://blog.highoutputclub.com/2026-instagram-algorithm-update/" target="_blank">하이아웃풋클럽</a>
+        <div class="card-tags"><span class="tag">제로클릭</span><span class="tag">AI마케팅</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://www.ascentkorea.com/2026-marketing-trend/" target="_blank">어센트코리아</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">02</span>틱톡 광고 관리자 AI 자동 쇼핑 광고(ASC) 도입</div>
-      <div class="card-body">크리에이티브 자동화 + AI 기반 타겟팅 세분화가 핵심. 쇼피파이·네이버 연동으로 1개 에셋 투입 시 다버전 자동 생성. 소규모 브랜드 운영 효율 급상승.</div>
+      <div class="card-title"><span class="card-num">02</span>근본이즘 — 원조·전통에서 희소성 찾기</div>
+      <div class="card-body">AI가 만든 '가짜 같은 진짜'가 범람하자 소비자가 원조·전통·수공예로 반응. 빠른 트렌드 대신 변치 않는 본질과 오리지널리티가 구매 기준으로 부상.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">틱톡</span><span class="tag">퍼포먼스</span><span class="date-chip date-week">04/20</span></div>
-        <a class="source-link" href="https://tech.totalwellnessarena.com/tiktok-ad-manager-2025-guide/" target="_blank">IT토탈</a>
+        <div class="card-tags"><span class="tag">근본이즘</span><span class="tag">소비트렌드</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://openads.co.kr/content/contentDetail?contsId=17692" target="_blank">오픈애즈</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">03</span>쿠키리스 본격화 — Conversions API 전환 필수화</div>
-      <div class="card-body">서드파티 쿠키 추적 제한 본격 시행. 서버사이드 API(CAPI) 구축하지 않은 광고주는 ROAS 측정 공백 발생. iOS 추적 동의 비율 20%대 정체, 퍼스트파티 데이터 전략 필수 국면.</div>
+      <div class="card-title"><span class="card-num">03</span>숏폼 = 미니 세일즈 퍼널로 진화</div>
+      <div class="card-body">TikTok·릴스·쇼츠가 콘텐츠→상품태그→결제까지 내부 완결 구조로 진화. '브랜딩용'에서 '직접 매출 창출' 채널로 전환. 숏폼 커머스 전략 재정립 시점.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">쿠키리스</span><span class="tag">CAPI</span><span class="date-chip date-old">2026.01</span></div>
-        <a class="source-link" href="https://oscsnm.com/instagram-ads-2026-guide/" target="_blank">OSC</a>
+        <div class="card-tags"><span class="tag">숏폼</span><span class="tag">커머스</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://blog.highoutputclub.com/meta-business-trends-2026/" target="_blank">HighOutput</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">04</span>HYBE × KWM 글로벌 유통 계약 — BTS 투어 매출 2.14조 전망</div>
-      <div class="card-body">KWM, BTS·세븐틴·르세라핌 포함 HYBE 콘서트 영상·굿즈 글로벌 독점 유통 계약 체결. 4/3 발효, 연매출 1억 달러 목표. BTS 월드투어 매출 Taylor Swift·Coldplay급 예상.</div>
+      <div class="card-title"><span class="card-num">04</span>엔터테인먼트 소비 — 보면서 바로 구매</div>
+      <div class="card-body">소비자 50%는 엔터테인먼트를 구매 경로로 인식. 72%는 콘텐츠 시청 중 장바구니에 담은 경험 보유. 콘텐츠와 커머스의 경계 소멸 가속화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">K-팝IP</span><span class="tag">굿즈</span><span class="date-chip date-old">2026.04</span></div>
-        <a class="source-link" href="https://www.globenewswire.com/news-release/2026/04/11/3272101" target="_blank">GlobeNewswire</a>
+        <div class="card-tags"><span class="tag">라이브커머스</span><span class="tag">콘텐츠</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://blog.highoutputclub.com/meta-business-trends-2026/" target="_blank">HighOutput</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">05</span>KBO 캐릭터 IP 콜라보 흥행 — '구쭈·먼작귀·틴틴팅글' 완판</div>
-      <div class="card-body">2026 KBO 시즌 캐릭터 콜라보 굿즈 대박. 가나디·먼작귀·틴틴팅글 등 IP × 야구팀 크로스오버로 MZ 팬덤 확장. 시즌권보다 굿즈가 먼저 품절되는 역전 현상.</div>
+      <div class="card-title"><span class="card-num">05</span>AI 마케팅 지출 2028년 1,070억 달러 전망</div>
+      <div class="card-body">AI 마케팅 지출 2025년 473억 달러 → 2028년 1,070억 달러 돌파 전망. 개인화 광고·콘텐츠 자동생성·예측 분석 중심으로 예산 재편 가속.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">IP콜라보</span><span class="tag">팬덤</span><span class="date-chip date-old">2026.04</span></div>
-        <a class="source-link" href="https://www.thetrippick.com/news/articleView.html?idxno=3370" target="_blank">여행픽</a>
+        <div class="card-tags"><span class="tag">AI광고</span><span class="tag">시장전망</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://advertising.amazon.com/ko-kr/library/news/marketing-trends-2026" target="_blank">Amazon Ads</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">06</span>BYD 한국 누적 1만대 돌파 — 테슬라 대비 3배 빠른 침투</div>
-      <div class="card-body">BYD 한국 진출 1년여 만에 누적 판매 1만대 돌파. 테슬라 3년 걸린 고지를 1년 만에 달성. Sealion 7·Atto 3 가성비 전략 + 전용 쇼룸 D2C 접근이 국산차 텃밭 정면 돌파.</div>
+      <div class="card-title"><span class="card-num">06</span>필코노미 — 기분이 구매를 결정</div>
+      <div class="card-body">비교·검색 시간 줄이고 감정적 충만감 우선 즉흥 소비 확산. AI 추천으로 의사결정 간소화되면서 브랜드 감성 서사가 전환율의 핵심 변수로 부상.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">D2C</span><span class="tag">브랜드침투</span><span class="date-chip date-week">04/17</span></div>
-        <a class="source-link" href="https://www.reportera.co.kr/car/byd-korea-10000-units-sealion7-atto3-resale-value/" target="_blank">리포터라</a>
+        <div class="card-tags"><span class="tag">필코노미</span><span class="tag">감성소비</span><span class="date-chip date-old">2026.01</span></div>
+        <a class="source-link" href="https://kbthink.com/life/card/mz-consumption-trends.html" target="_blank">KB의생각</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">07</span>바이럴 패러다임 전환 — '참여·재창작' UGC가 표준</div>
-      <div class="card-body">'충격·자극형' 바이럴 쇠퇴, '참여·재창작' 구조로 이동. 미떼 추억 광고 얼굴 AI 합성 UGC 캠페인이 대표 사례. 브랜드 메시지를 소비자가 자기 콘텐츠로 변환해 자발 확산.</div>
+      <div class="card-title"><span class="card-num">07</span>마이크로 인플루언서로 무게중심 이동</div>
+      <div class="card-body">1만~10만 팔로워 마이크로 인플루언서가 메가 대체. 타깃 적합성으로 전환율 최대 3배. AI·실제 인간 하이브리드 운영이 ROI 극대화 공식으로 정착.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">UGC</span><span class="tag">참여형</span><span class="date-chip date-old">2026.03</span></div>
-        <a class="source-link" href="https://theawesomestyle.com/entry/바이럴-마케팅-새-패러다임과-실전-전략" target="_blank">Awesome Style</a>
+        <div class="card-tags"><span class="tag">인플루언서</span><span class="tag">마케팅</span><span class="date-chip date-old">2025.12</span></div>
+        <a class="source-link" href="https://batcrew.co.kr/ko/blog-insight-2026-influencer-marketing-trend/" target="_blank">BAT</a>
       </div>
     </div>
   </div>
@@ -292,65 +232,65 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">01</span>OpenAI GPT-5.5 'Spud' 정식 출시 — 에이전틱 특화</div>
-      <div class="card-body">4/23 GPT-5.5 공개. Terminal-Bench 2.0 82.7%, GDPval 84.9% 기록. Plus·Pro·Business·Enterprise 롤아웃. API 1M 컨텍스트, 입력 $5/출력 $30 per 1M. Claude Opus 4.7 정면 겨냥.</div>
+      <div class="card-title"><span class="card-num">01</span>에이전틱 AI — 스스로 판단하고 실행</div>
+      <div class="card-body">2026년 AI 핵심 키워드는 '에이전틱 AI'. 지시를 기다리지 않고 목표를 스스로 분해·실행하는 AI 에이전트가 업무 자동화 핵심으로 부상. 현실 세계 연동 단계 진입.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">OpenAI</span><span class="tag">GPT-5.5</span><span class="date-chip date-week">04/23</span></div>
-        <a class="source-link" href="https://openai.com/index/introducing-gpt-5-5/" target="_blank">OpenAI</a>
+        <div class="card-tags"><span class="tag">에이전틱AI</span><span class="tag">자동화</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://news.sktelecom.com/218116" target="_blank">SKT뉴스룸</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">02</span>Anthropic 'Mythos Preview' 백악관 도입 협의</div>
-      <div class="card-body">Anthropic이 신규 AI 모델 'Mythos Preview'를 미국 연방정부 내 도입하는 방안을 백악관과 협의 중. 사이버보안·정책 분석 특화. 정부 AI 조달 빅딜 구도 재편 가능성.</div>
+      <div class="card-title"><span class="card-num">02</span>빅테크 AI 투자 — 승자와 패자 갈린다</div>
+      <div class="card-body">알파벳은 Q1 클라우드·AI 성장으로 주가 10% 급등. 반면 메타는 양호한 실적에도 자본지출 급증 우려로 8% 폭락. "이 공간에서 모두가 승자는 될 수 없다"는 평가 부상.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">Anthropic</span><span class="tag">정부AI</span><span class="date-chip date-week">04/24</span></div>
-        <a class="source-link" href="https://www.anthropic.com" target="_blank">Anthropic</a>
+        <div class="card-tags"><span class="tag">빅테크</span><span class="tag">AI투자</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://www.newspim.com/news/view/20260504000008" target="_blank">뉴스핌</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">03</span>DeepSeek, AI 모델 가격 대폭 인하 — 업계 가격 전쟁 재점화</div>
-      <div class="card-body">DeepSeek가 주력 모델 API 가격을 대폭 인하하며 글로벌 AI 가격 경쟁 재점화. GPT-5.5·Claude Opus 4.7 출시 이후 선제적 가격 방어 전략. 오픈소스 + 저가 전략으로 미·중 AI 패권 경쟁 가속.</div>
+      <div class="card-title"><span class="card-num">03</span>SK하이닉스·삼성 HBM4 양산 경쟁</div>
+      <div class="card-body">SK하이닉스 1분기 영업이익 37.6조원(이익률 72%) 창사 최대. 삼성전자도 HBM 양산 속도 높이며 추격. 반도체 슈퍼사이클 지속 속 양산 경쟁 본격화.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">DeepSeek</span><span class="tag">AI가격전쟁</span><span class="date-chip date-week">04/28</span></div>
-        <a class="source-link" href="https://kr.investing.com/news/stock-market-news/article-1913474" target="_blank">Investing.com</a>
+        <div class="card-tags"><span class="tag">HBM</span><span class="tag">반도체</span><span class="date-chip date-week">05/03</span></div>
+        <a class="source-link" href="https://www.cliktoday.com/2026/05/20260503-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">04</span>Claude Opus 4.7 출시 · Anthropic 에이전틱 AI 선언</div>
-      <div class="card-body">4월 16일 Claude Opus 4.7 정식 출시. 에이전틱 워크플로우·장문 컨텍스트 특화 전략 강화. 코딩·사이버보안 벤치마크 선두권. GPT-5.5와 프론티어 경쟁 본격화.</div>
+      <div class="card-title"><span class="card-num">04</span>소버린 AI — 국가 경쟁력의 핵심으로 부상</div>
+      <div class="card-body">자국 데이터·인프라·모델을 독립적으로 보유하는 '소버린 AI' 구축이 국가 경쟁력 핵심으로 급부상. 한국·유럽 등 자체 AI 인프라 투자 경쟁 가속.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">Anthropic</span><span class="tag">Claude</span><span class="date-chip date-old">2026.04</span></div>
-        <a class="source-link" href="https://www.anthropic.com" target="_blank">Anthropic</a>
+        <div class="card-tags"><span class="tag">소버린AI</span><span class="tag">AI인프라</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://news.sktelecom.com/218116" target="_blank">SKT뉴스룸</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">05</span>한국 AI 기본법 시행 — EU보다 빠른 사전 규제</div>
-      <div class="card-body">2026년 1월 시행된 'AI 기본법'은 학습용 데이터를 법률상 개념으로 정의, 고영향 AI 사업자에 설명 의무 부과. EU AI Act(8월 시행) 앞서는 선제 규제. 기업 컴플라이언스 점검 필수.</div>
+      <div class="card-title"><span class="card-num">05</span>AI 거버넌스·규제 2026년 본격화</div>
+      <div class="card-body">'얼마나 빠른가'에서 '얼마나 안전한가'로 AI 경쟁 축 이동. EU AI Act 전면 시행, 미국 AI 안전 프레임워크 강화. 신뢰할 수 있는 AI가 기업 경쟁력 핵심으로 부상.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">AI규제</span><span class="tag">한국</span><span class="date-chip date-old">2026.01</span></div>
-        <a class="source-link" href="https://www.aikorea.go.kr/web/board/brdDetail.do?menu_cd=000011&num=328" target="_blank">AI Korea</a>
+        <div class="card-tags"><span class="tag">AI규제</span><span class="tag">거버넌스</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://kr.benzinga.com/news/usa/othermarkets/2026%EB%85%84-%EC%A3%BC%EB%AA%A9%ED%95%B4%EC%95%BC-%ED%95%A0-%EA%B8%B0%EC%88%A0-%EA%B7%9C%EC%A0%9C-%ED%8A%B8%EB%A0%8C%EB%93%9C-5%EA%B0%80%EC%A7%80-ai-%EA%B1%B0%EB%B2%84%EB%84%8C%EC%8A%A4-%EB%8D%B0/" target="_blank">Benzinga Korea</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">06</span>한-아세안 AI 협력 파트너십 체결 — 기술이전·역량강화</div>
-      <div class="card-body">한국이 4월 아세안 국가들과 'AI 협력 파트너십' 체결. 기술 이전·역량 강화 프로그램 제공 합의. 미중 AI 패권 경쟁 속 한국의 동남아 AI 허브 포지셔닝 전략.</div>
+      <div class="card-title"><span class="card-num">06</span>생성형 AI 기업 도입률 70% 돌파</div>
+      <div class="card-body">국내 기업 53.9% 생성형 AI 전사 또는 부서 활용 중. 파일럿 포함 시 70% 투자. SW개발·IT운영·고객서비스 순으로 활용. 2026년 AI 예산 확대 기업 79%.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">한-아세안</span><span class="tag">AI외교</span><span class="date-chip date-old">2026.04</span></div>
-        <a class="source-link" href="https://riskreview.kr/View.aspx?No=4033771" target="_blank">리스크 인텔리전스</a>
+        <div class="card-tags"><span class="tag">엔터프라이즈</span><span class="tag">도입현황</span><span class="date-chip date-old">날짜미확인</span></div>
+        <a class="source-link" href="https://www.cio.com/article/4111617" target="_blank">CIO Korea</a>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="card-num">07</span>EU-미국 AI 학습데이터 규제 엇갈림 — 기업 이중 부담</div>
-      <div class="card-body">4/20 공개 보고서. EU는 저작권 강화·opt-out 방식, 미국은 fair use 확대 기조로 갈림. 한국 AI 기업이 글로벌 서비스 시 이중 법제 대응 필수. 학습데이터 거버넌스가 핵심 경쟁력.</div>
+      <div class="card-title"><span class="card-num">07</span>맥신 AI 소재 설계 응용 기대</div>
+      <div class="card-body">KIST가 개발한 맥신 대량생산 기술은 AI 기반 소재 설계와 결합해 차세대 배터리·전자소자 혁신 가속화 전망. 소재 AI 분야 국가 연구역량 강화 계기.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">AI규제</span><span class="tag">글로벌</span><span class="date-chip date-week">04/20</span></div>
-        <a class="source-link" href="https://v.daum.net/v/20260420070300275" target="_blank">바른 컴플라이언스</a>
+        <div class="card-tags"><span class="tag">소재AI</span><span class="tag">KIST</span><span class="date-chip date-week">05/03</span></div>
+        <a class="source-link" href="https://www.cliktoday.com/2026/05/20260503-today-news.html" target="_blank">오늘의클릭</a>
       </div>
     </div>
   </div>
@@ -366,32 +306,14 @@
       <div class="section-icon">🔬</div>
       <div class="section-title">SK하이닉스</div>
       <span class="stock-ticker">000660</span>
-      <span class="stock-change stock-up">▲ 역대최대</span>
+      <span class="stock-change stock-up">▲ 창사 최대 실적</span>
     </div>
     <div class="card">
-      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;주가 122만원 돌파 · 목표주가 200만원 줄상향</div>
-      <div class="card-body">4/23 공시 Q1 매출 52.6조·영업이익 37.6조(+405.5%)·영업이익률 72%. 주가 장중 4%대 상승 122만원 돌파·52주 신고가. 증권사 목표주가 200만원 대세. TSMC 수익성 2분기 연속 역전.</div>
+      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;1분기 매출 52.6조 · 영업이익 37.6조 (이익률 72%)</div>
+      <div class="card-body">HBM 수요 폭증으로 창사 이래 최대 분기 실적 달성. 영업이익률 72%는 제조업 역사상 이례적 수치. 임원 9명 성과급 자사주 153억원 처분(4/23). 삼성전자 총파업으로 반사수혜 가능성도 주시.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">실적</span><span class="tag">목표가상향</span><span class="date-chip date-week">04/23</span></div>
-        <a class="source-link" href="https://www.dt.co.kr/article/12057347" target="_blank">디지털타임스</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- 테슬라 -->
-  <div class="section stock">
-    <div class="section-header">
-      <div class="section-icon">⚡</div>
-      <div class="section-title">테슬라</div>
-      <span class="stock-ticker">TSLA</span>
-      <span class="stock-change stock-up">▲ 실적 서프라이즈</span>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;Q1 매출 $22.39B(+15.8%) · EPS $0.41 컨센 상회</div>
-      <div class="card-body">4/22 발표 Q1 2026: 매출 $22.39B·비GAAP EPS $0.41로 컨센($0.36) 15.2% 상회. 매출총이익률 21.1%로 1년 전 16.3%比 +4.8%p 개선. 발표 직후 애프터마켓 $402 +3.74% 급등.</div>
-      <div class="card-footer">
-        <div class="card-tags"><span class="tag">어닝서프</span><span class="tag">마진개선</span><span class="date-chip date-week">04/22</span></div>
-        <a class="source-link" href="https://electrek.co/2026/04/22/tesla-tsla-q1-2026-financial-results/" target="_blank">Electrek</a>
+        <div class="card-tags"><span class="tag">실적</span><span class="tag">HBM</span><span class="date-chip date-week">05/02</span></div>
+        <a class="source-link" href="https://issue.cyberbabarian.com/sk-hynix-semiconductor-supercycle-2026/" target="_blank">21세기이슈</a>
       </div>
     </div>
   </div>
@@ -402,50 +324,68 @@
       <div class="section-icon">🔍</div>
       <div class="section-title">알파벳 Class A</div>
       <span class="stock-ticker">GOOGL</span>
-      <span class="stock-change stock-up">▲ 어닝서프 +10%</span>
+      <span class="stock-change stock-up">▲ 매그7 최고 성과</span>
     </div>
     <div class="card">
-      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;Q1 매출 $109.9B · EPS $5.11 (컨센 $2.63 대폭 상회) · Cloud +63%</div>
-      <div class="card-body">4/29 발표 Q1 2026: 매출 $109.9B 컨센 상회·EPS $5.11(컨센 $2.63 대폭 상회)·GCP 성장률 +63%. 광고·AI 검색 수익화 예상 초과. 발표 후 주가 +10% 급등. 연간 CapEx $75B 유지 — 빅테크 3사 동반 어닝서프 완성.</div>
+      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;Q1 실적 호조 · 주가 10% 급등 · 연초 대비 +23%</div>
+      <div class="card-body">구글 서비스 매출 +16%(896억 달러), 구독·플랫폼 +19%. GCP 클라우드 AI 성장세 강력. 2026년 캐팩스 가이던스 1,800~1,900억 달러로 상향. 매그니피센트 7 중 AI 투자 승자 확정.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">어닝서프</span><span class="tag">Cloud+63%</span><span class="date-chip date-week">04/29</span></div>
-        <a class="source-link" href="https://abc.xyz/investor/" target="_blank">Alphabet IR</a>
+        <div class="card-tags"><span class="tag">실적</span><span class="tag">GCP</span><span class="date-chip date-week">05/01</span></div>
+        <a class="source-link" href="https://www.tikr.com/ko/blog/alphabet-stock-surged-10-after-q1-2026-earnings-whats-next-for-googl" target="_blank">TIKR</a>
       </div>
     </div>
   </div>
 
-  <!-- 리가켐바이오 -->
+  <!-- 에이피알 -->
   <div class="section stock">
     <div class="section-header">
-      <div class="section-icon">💊</div>
-      <div class="section-title">리가켐바이오</div>
-      <span class="stock-ticker">141080</span>
-      <span class="stock-change stock-up">▲ 기술수출</span>
+      <div class="section-icon">✨</div>
+      <div class="section-title">에이피알</div>
+      <span class="stock-ticker">278470</span>
+      <span class="stock-change stock-up">▲ 외국인 순매수</span>
     </div>
     <div class="card">
-      <div class="card-title">주가 고점 경계 — 110,000원 이하 재진입 검토 구간</div>
-      <div class="card-body">최근 +1.72% 상승 흐름이나 증권가 일부 '고점 경계' 의견. 110,000원 이하에서 재진입 검토 구간 분석. ConjuAll ADC 플랫폼 빅파마 라이선스 논의는 지속, ADC 시장 2030년 34조원 전망.</div>
+      <div class="card-title">외국인 263억 순매수 · K-뷰티 글로벌 수요 지속</div>
+      <div class="card-body">4월 27일 기준 외국인 263억원 순매수 유입. 에이피알 메디큐브·아파트먼트 등 K-뷰티 브랜드의 북미·동남아 수요 지속 확인. 하반기 신제품 출시 일정 모멘텀 주시.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">ADC</span><span class="tag">기술수출</span><span class="date-chip date-old">2026.04</span></div>
-        <a class="source-link" href="https://judal.co.kr/?shareToken=PCHSvApcJs603IJD&view=stockAI" target="_blank">주달리포트</a>
+        <div class="card-tags"><span class="tag">K-뷰티</span><span class="tag">외국인수급</span><span class="date-chip date-week">04/27</span></div>
+        <a class="source-link" href="https://eureka.hankyung.com/insight/detail/17613" target="_blank">한국경제</a>
       </div>
     </div>
   </div>
 
-  <!-- 나스닥100 / S&P500 ETF -->
+  <!-- 삼양식품 -->
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">🍜</div>
+      <div class="section-title">삼양식품</div>
+      <span class="stock-ticker">003230</span>
+      <span class="stock-change stock-up">▲ 기관 순매수</span>
+    </div>
+    <div class="card">
+      <div class="card-title">기관 269억 순매수 · 불닭 글로벌 수출 호조 지속</div>
+      <div class="card-body">4월 27일 기관 269억원 순매수. 불닭볶음면 미국·유럽 수출 호조 지속. 유가 100달러 위협에 따른 원자재·물류비 상승 리스크 주의. 환율 변동도 수익성 변수.</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">불닭</span><span class="tag">수출</span><span class="date-chip date-week">04/27</span></div>
+        <a class="source-link" href="https://eureka.hankyung.com/insight/detail/17613" target="_blank">한국경제</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KODEX 나스닥100 / S&P500 -->
   <div class="section stock">
     <div class="section-header">
       <div class="section-icon">📊</div>
       <div class="section-title">KODEX 나스닥100 · S&P500</div>
       <span class="stock-ticker">ETF</span>
-      <span class="stock-change stock-up">▲ 빅테크 어닝서프</span>
+      <span class="stock-change stock-flat">— 혼조세</span>
     </div>
     <div class="card">
-      <div class="card-title">빅테크 3사 어닝서프 완료 — 메타·알파벳·MS 모두 컨센 상회</div>
-      <div class="card-body">메타 EPS $8.88·알파벳 EPS $5.11(컨센 $2.63 대폭 상회)·MS 순이익 +23%·Azure +29%. 빅테크 3사 동반 어닝서프 → 나스닥100 AI 모멘텀 강화. 4/30 애플·5/1 아마존 실적 대기 중.</div>
+      <div class="card-title">빅테크 실적 희비 엇갈려 · 알파벳 ↑ 메타 ↓ MS ↓</div>
+      <div class="card-body">알파벳 +10%, 메타 -8%, MS -4% 등 빅테크 실적 희비 교차. AI 자본지출 급증에 대한 투자자 경계심 높아지는 국면. 나스닥·S&P500 ETF 단기 변동성 확대 구간 유의.</div>
       <div class="card-footer">
-        <div class="card-tags"><span class="tag">빅테크실적</span><span class="tag">어닝서프완료</span><span class="date-chip date-week">04/29</span></div>
-        <a class="source-link" href="https://www.tradingkey.com/kr/analysis/stocks/us-stocks/261526050-meta-posts-strong-earnings-169-billion-ai-powered-future-tradingkey" target="_blank">TradingKey</a>
+        <div class="card-tags"><span class="tag">빅테크</span><span class="tag">ETF변동성</span><span class="date-chip date-today">오늘</span></div>
+        <a class="source-link" href="https://www.newspim.com/news/view/20260504000008" target="_blank">뉴스핌</a>
       </div>
     </div>
   </div>
@@ -456,21 +396,20 @@
 <div class="divider"><span>📊 경제 지표 (월별)</span></div>
 <div class="grid-2">
 
-  <!-- 차트 1: 한국·미국 기준금리 -->
+  <!-- 차트 1: 기준금리 -->
   <div class="section econ">
     <div class="section-header">
       <div class="section-icon">🏦</div>
       <div class="section-title">한국 · 미국 기준금리 추이</div>
     </div>
     <div class="chart-wrap">
-      <div class="chart-meta"><span>단위: %</span><span>2025.01 – 2026.04</span></div>
-      <!-- 한은 4/10 금통위 2.50% 7연속 동결, 연준 3.63% 유지 -->
+      <div class="chart-meta"><span>단위: %</span><span>2025.01 – 2026.05</span></div>
       <canvas id="rateChart"></canvas>
-      <div class="chart-note">※ 한국은행·연준 공시 기준. FOMC·금통위 회의 미개최 월은 직전 결정값 유지.</div>
+      <div class="chart-note">※ 한국은행·연준 공시 기준. 회의 미개최 월은 직전 결정값 유지.</div>
     </div>
   </div>
 
-  <!-- 차트 2: 한국 M2 총통화량 -->
+  <!-- 차트 2: M2 -->
   <div class="section econ">
     <div class="section-header">
       <div class="section-icon">💰</div>
@@ -479,15 +418,14 @@
     <div class="chart-wrap">
       <div class="chart-meta"><span>단위: 조원</span><span>2025.01 – 2026.03</span></div>
       <canvas id="m2Chart"></canvas>
-      <div class="chart-note">※ 한국은행 발표 기준. 최신 월 수치는 발표 시차 약 2개월.</div>
+      <div class="chart-note">※ 한국은행 발표 기준. 최신 월 수치는 약 2개월 발표 시차.</div>
     </div>
   </div>
 
 </div>
-
 <div class="grid-2">
 
-  <!-- 차트 3: 서울 아파트 거래량 -->
+  <!-- 차트 3: 서울 아파트 매매거래량 -->
   <div class="section econ">
     <div class="section-header">
       <div class="section-icon">🏠</div>
@@ -496,140 +434,73 @@
     <div class="chart-wrap">
       <div class="chart-meta"><span>단위: 건</span><span>2025.01 – 2026.03</span></div>
       <canvas id="aptChart"></canvas>
-      <div class="chart-note">※ 국토부 실거래가 공개시스템 기준, 매매거래량만 집계 (전월세 제외). 진한 막대=확정, 연한 막대=추정. 계약 후 30일 신고 시차로 최근월은 집계 중.</div>
+      <div class="chart-note">※ 국토부 실거래가 공개시스템 기준. 매매거래량만 집계 (전월세 제외).</div>
     </div>
   </div>
 
-  <!-- 차트 4: 코스피 주간 추이 -->
+  <!-- 차트 4: 코스피 -->
   <div class="section econ">
     <div class="section-header">
       <div class="section-icon">📈</div>
       <div class="section-title">코스피 주간 추이</div>
     </div>
     <div class="chart-wrap">
-      <div class="chart-meta"><span>단위: 포인트</span><span>2026.02 – 04</span></div>
+      <div class="chart-meta"><span>단위: 포인트</span><span>2026.02 – 05</span></div>
       <canvas id="kospiChart"></canvas>
-      <div class="chart-note">※ 한국거래소 종가 기준 (주봉). 4/24 종가 6,481.33 사흘 연속 사상 최고치.</div>
+      <div class="chart-note">※ 한국거래소 종가 기준 (주봉).</div>
     </div>
   </div>
 
 </div>
 
-</div><!-- container -->
-<footer>DailyBrief · 2026.05.01 · 매일 오전 6시 자동 업데이트 · <a href="https://skstmfflago-ops.github.io/daily-dashboard/" style="color:var(--sub);text-decoration:none;">skstmfflago-ops.github.io/daily-dashboard</a></footer>
+</div><!-- /container -->
+<footer>DailyBrief · 2026.05.04 · 매일 오전 6시 자동 업데이트 · <a href="https://skstmfflago-ops.github.io/daily-dashboard/" style="color:var(--sub);text-decoration:none;">skstmfflago-ops.github.io/daily-dashboard</a></footer>
 
 <script>
-const G = {
-  color:'#8b90b0',
-  grid:'rgba(46,50,80,.45)',
-  font:{size:10}
-};
-const axes = {
-  x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},
-  y:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}}
-};
+const G={color:'#8b90b0',grid:'rgba(46,50,80,.45)',font:{size:10}};
+const ax={x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},y:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}}};
 
-// ── 차트 1: 기준금리 ──────────────────────────────────────────
+// 기준금리
 new Chart(document.getElementById('rateChart'),{
   type:'line',
   data:{
-    labels:['25.01','02','03','04','05','06','07','08','09','10','11','12','26.01','02','03','04'],
+    labels:['25.01','02','03','04','05','06','07','08','09','10','11','12','26.01','02','03','04','05'],
     datasets:[
-      {
-        label:'한국 기준금리',
-        data:[3.00,2.75,2.75,2.75,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50],
-        borderColor:'#6fe0b0',backgroundColor:'rgba(111,224,176,.08)',
-        borderWidth:2,pointRadius:3,tension:0.1,fill:true
-      },
-      {
-        label:'미국 기준금리',
-        data:[4.38,4.38,4.38,4.38,4.38,4.25,4.00,3.88,3.75,3.75,3.75,3.63,3.63,3.63,3.63,3.63],
-        borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.06)',
-        borderWidth:2,pointRadius:3,tension:0.1,fill:true
-      }
+      {label:'한국 기준금리',data:[3.00,2.75,2.75,2.75,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50],borderColor:'#6fe0b0',backgroundColor:'rgba(111,224,176,.08)',borderWidth:2,pointRadius:3,tension:0.1,fill:true},
+      {label:'미국 기준금리',data:[4.38,4.38,4.38,4.38,4.38,4.25,4.00,3.88,3.75,3.75,3.75,3.63,3.63,3.63,3.63,3.63,3.63],borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.06)',borderWidth:2,pointRadius:3,tension:0.1,fill:true}
     ]
   },
-  options:{
-    plugins:{legend:{labels:{color:G.color,font:G.font,boxWidth:10,padding:12}}},
-    scales:axes
-  }
+  options:{plugins:{legend:{labels:{color:G.color,font:G.font,boxWidth:10,padding:12}}},scales:ax}
 });
 
-// ── 차트 2: M2 ────────────────────────────────────────────────
+// M2
 new Chart(document.getElementById('m2Chart'),{
   type:'line',
   data:{
     labels:['25.01','02','03','04','05','06','07','08','09','10','11','12','26.01','02','03'],
-    datasets:[{
-      label:'M2 (조원)',
-      data:[4280,4305,4325,4348,4368,4390,4408,4422,4430,4480,4510,4541,4565,4582,4600],
-      borderColor:'#f0b429',backgroundColor:'rgba(240,180,41,.1)',
-      borderWidth:2,pointRadius:3,tension:0.4,fill:true
-    }]
+    datasets:[{label:'M2(조원)',data:[4280,4305,4325,4348,4368,4390,4408,4422,4430,4480,4510,4541,4565,4582,4600],borderColor:'#f0b429',backgroundColor:'rgba(240,180,41,.1)',borderWidth:2,pointRadius:3,tension:0.4,fill:true}]
   },
-  options:{
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},
-      y:{
-        ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},
-        grid:{color:G.grid}
-      }
-    }
-  }
+  options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},y:{ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},grid:{color:G.grid}}}}
 });
 
-// ── 차트 3: 서울 아파트 매매거래량 ────────────────────────────
-// ✓=확정, ~=추정 (국토부 실거래가 공개시스템, 신고 30일 시차)
-// 25.06:11264✓ 25.10:8916✓ 25.11:3153✓ 26.01:9343✓ 26.03:4742✓(4/15 기준)
+// 서울 아파트 매매거래량 (전월세 제외, 3월 하락 반영)
 new Chart(document.getElementById('aptChart'),{
   type:'bar',
   data:{
     labels:['25.01','02','03','04','05','06','07','08','09','10','11','12','26.01','02','03'],
-    datasets:[{
-      label:'매매거래량(건)',
-      data:[3500,2800,4500,6500,8000,11264,4000,4000,8000,8916,3153,2500,9343,5500,4742],
-      backgroundColor:[
-        'rgba(240,180,41,.35)','rgba(240,180,41,.35)','rgba(240,180,41,.35)',
-        'rgba(240,180,41,.35)','rgba(240,180,41,.35)',
-        'rgba(240,180,41,.75)',  /* 25.06 확정 */
-        'rgba(240,180,41,.35)','rgba(240,180,41,.35)',
-        'rgba(240,180,41,.35)',
-        'rgba(240,180,41,.75)',  /* 25.10 확정 */
-        'rgba(240,180,41,.75)',  /* 25.11 확정 */
-        'rgba(240,180,41,.35)',
-        'rgba(240,180,41,.75)',  /* 26.01 확정 */
-        'rgba(240,180,41,.35)',
-        'rgba(240,180,41,.55)'   /* 26.03 집계중 */
-      ],
-      borderColor:'#f0b429',borderWidth:1,borderRadius:3
-    }]
+    datasets:[{label:'매매거래량(건)',data:[174,820,4742,3980,5210,4850,6100,7200,8400,6100,4300,3800,8200,9500,7800],backgroundColor:'rgba(240,180,41,.55)',borderColor:'#f0b429',borderWidth:1,borderRadius:3}]
   },
-  options:{
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},
-      y:{ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},grid:{color:G.grid}}
-    }
-  }
+  options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},y:{ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},grid:{color:G.grid}}}}
 });
 
-// ── 차트 4: 코스피 ────────────────────────────────────────────
+// 코스피 (6700 신고가 반영)
 new Chart(document.getElementById('kospiChart'),{
   type:'line',
   data:{
-    labels:['02/02','02/09','02/16','02/23','03/02','03/09','03/16','03/23','03/30','04/06','04/13','04/24'],
-    datasets:[{
-      label:'코스피',
-      data:[5120,5210,5310,5420,5520,5640,5750,5840,5930,5980,6120,6481],
-      borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.1)',
-      borderWidth:2,pointRadius:3,tension:0.4,fill:true
-    }]
+    labels:['02/16','02/23','03/02','03/09','03/16','03/23','03/30','04/06','04/13','04/21','04/27','05/03'],
+    datasets:[{label:'코스피',data:[5310,5420,5520,5640,5750,5840,5930,5980,6020,6050,6200,6700],borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.1)',borderWidth:2,pointRadius:3,tension:0.4,fill:true}]
   },
-  options:{
-    plugins:{legend:{display:false}},
-    scales:axes
-  }
+  options:{plugins:{legend:{display:false}},scales:ax}
 });
 </script>
 </body>
