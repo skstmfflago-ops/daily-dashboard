@@ -182,7 +182,15 @@ def fetch_data() -> dict:
             raw = raw[4:]
     raw = raw.strip()
 
-    data = json.loads(raw)
+    # JSON 파싱 실패 시 원문 출력 (디버그용)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        print(f"[JSON 파싱 오류] {e}")
+        print(f"[응답 길이] {len(raw)} chars")
+        print(f"[응답 마지막 200자] ...{raw[-200:]}")
+        raise
+
     log.info(
         "수집 완료: 뉴스 %d / MZ %d / AI %d / 주식 %d",
         len(data.get("news", [])),
