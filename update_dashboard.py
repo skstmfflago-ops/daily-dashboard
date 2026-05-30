@@ -98,55 +98,23 @@ PROMPT = f"""오늘 날짜: {TODAY_KR} ({TODAY_ISO})
 
 ━━ 응답 JSON 구조 ━━
 {{
-  "news":       [주요뉴스 7개],
-  "mz_trends":  [마케팅·MZ·소비 트렌드 7개],
-  "ai_trends":  [AI 기술·산업 트렌드 7개],
-  "stocks":     [중요 이슈 있는 보유 종목만, 자잘한 건 제외. 이슈 없으면 빈 배열],
-  "charts": {{
-    "rate":  {{"labels":[...], "korea":[...], "us":[...]}},
-    "m2":    {{"labels":[...], "data":[...]}},
-    "apt":   {{"labels":[...], "data":[...]}},
-    "kospi": {{"labels":[...], "data":[...]}}
-  }}
+  "news":      [주요뉴스 7개],
+  "mz_trends": [마케팅·MZ·소비 트렌드 7개],
+  "ai_trends": [AI 기술·산업 트렌드 7개],
+  "stocks":    [중요 이슈 있는 보유 종목만. 이슈 없으면 빈 배열]
 }}
 
-뉴스/트렌드 항목 구조:
-{{
-  "title":        "제목 (40자 이내)",
-  "body":         "핵심만 1~2문장, 각 문장 40자 이내",
-  "tags":         ["태그1","태그2"],
-  "date_type":    "today|week|old",
-  "date_display": "오늘|MM/DD|YYYY.MM|날짜미확인",
-  "source_name":  "출처명",
-  "source_url":   "https://실제접속가능한URL"
-}}
+※ 차트 데이터는 포함하지 말 것.
+
+항목 구조 (news·mz_trends·ai_trends 동일):
+{{"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그1","태그2"],"date_type":"today|week|old","date_display":"오늘|MM/DD|YYYY.MM|날짜미확인","source_name":"출처명","source_url":"https://URL"}}
 
 stocks 항목 구조:
-{{
-  "ticker":       "종목코드 또는 티커",
-  "company":      "회사명",
-  "icon":         "이모지",
-  "change_label": "▲ 상승이유 또는 ▼ 하락이유 또는 — 보합",
-  "change_type":  "up|down|flat",
-  "is_important": true,
-  "title":        "제목",
-  "body":         "요약",
-  "tags":         [...],
-  "date_type":    "...",
-  "date_display": "...",
-  "source_name":  "...",
-  "source_url":   "https://..."
-}}
+{{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"▲이유","change_type":"up|down|flat","is_important":true,"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그"],"date_type":"today|week|old","date_display":"오늘|MM/DD","source_name":"출처","source_url":"https://URL"}}
 
 보유 종목: {json.dumps(PORTFOLIO, ensure_ascii=False)}
 
-차트 데이터 수집 기준:
-- rate:  한국·미국 기준금리 (2025.01~현재, 단위: %, 회의 미개최 월은 직전값 유지)
-- m2:    한국 M2 총통화량 (2025.01~최근 발표 월, 단위: 조원, 약 2개월 시차)
-- apt:   서울 아파트 매매거래량 (2025.01~최근, 단위: 건, 전월세 제외)
-- kospi: 코스피 주봉 종가 (최근 3개월)
-
-JSON만 출력. 코드블록·설명 텍스트 없이 순수 JSON만."""
+JSON만 출력. 코드블록·설명 없이 순수 JSON만."""
 
 
 def fetch_data() -> dict:
@@ -164,7 +132,7 @@ def fetch_data() -> dict:
 
     resp = client.messages.create(
         model="claude-sonnet-4-5",
-        max_tokens=12000,
+        max_tokens=8000,
         tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
         messages=[{"role": "user", "content": PROMPT}],
     )
@@ -270,11 +238,24 @@ def build_archive_links() -> str:
 
 
 def build_html(data: dict) -> str:
-    c   = data["charts"]
-    r   = c["rate"]
-    m2  = c["m2"]
-    apt = c["apt"]
-    ksp = c["kospi"]
+    # ── 차트 고정 데이터 (월별 발표 기준, 필요시 수동 업데이트) ──────
+    r = {
+        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03","04","05"],
+        "korea":  [3.00,2.75,2.75,2.75,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50],
+        "us":     [4.38,4.38,4.38,4.38,4.38,4.25,4.00,3.88,3.75,3.75,3.75,3.63,3.63,3.63,3.63,3.63,3.63],
+    }
+    m2 = {
+        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03"],
+        "data":   [4280,4305,4325,4348,4368,4390,4408,4422,4430,4480,4510,4541,4565,4582,4600],
+    }
+    apt = {
+        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03"],
+        "data":   [174,820,4742,3980,5210,4850,6100,7200,8400,6100,4300,3800,8200,9500,7800],
+    }
+    ksp = {
+        "labels": ["03/09","03/16","03/23","03/30","04/06","04/13","04/21","04/27","05/03","05/11","05/15","05/27"],
+        "data":   [5640,5750,5840,5930,5980,6020,6050,6200,6700,7800,8000,8228],
+    }
 
     return f"""<!DOCTYPE html>
 <html lang="ko">
