@@ -163,9 +163,9 @@ def fetch_data() -> dict:
     print("뉴스 검색 중... (1~2분 소요)")
 
     resp = client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=8000,
-        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 25}],
+        model="claude-haiku-4-5",
+        max_tokens=5000,
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
         messages=[{"role": "user", "content": PROMPT}],
     )
 
