@@ -71,6 +71,80 @@ PORTFOLIO = {
 }
 
 
+# ── 차트 데이터 (chart_data.json 에서 로드, 매월 1일 갱신) ────────
+CHART_DATA_FILE = THIS_DIR / "chart_data.json"
+
+DEFAULT_CHARTS = {
+    "rate": {
+        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03","04","05"],
+        "korea":  [3.00,2.75,2.75,2.75,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50],
+        "us":     [4.38,4.38,4.38,4.38,4.38,4.25,4.00,3.88,3.75,3.75,3.75,3.63,3.63,3.63,3.63,3.63,3.63],
+    },
+    "m2": {
+        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03"],
+        "data":   [4280,4305,4325,4348,4368,4390,4408,4422,4430,4480,4510,4541,4565,4582,4600],
+    },
+    "apt": {
+        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03"],
+        "data":   [174,820,4742,3980,5210,4850,6100,7200,8400,6100,4300,3800,8200,9500,7800],
+    },
+    "kospi": {
+        "labels": ["03/09","03/16","03/23","03/30","04/06","04/13","04/21","04/27","05/03","05/11","05/15","05/27"],
+        "data":   [5640,5750,5840,5930,5980,6020,6050,6200,6700,7800,8000,8228],
+    },
+    "updated": "2026-05",
+}
+
+def load_chart_data() -> dict:
+    if CHART_DATA_FILE.exists():
+        try:
+            return json.loads(CHART_DATA_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return DEFAULT_CHARTS
+
+CHART_UPDATE_PROMPT = f"""오늘: {TODAY_ISO}
+최신 차트 데이터를 검색해서 JSON으로만 응답하세요.
+
+{{
+  "rate":  {{"labels":["25.01",...,"현재월"], "korea":[...], "us":[...]}},
+  "m2":    {{"labels":["25.01",...,"최근발표월"], "data":[...]}},
+  "apt":   {{"labels":["25.01",...,"최근발표월"], "data":[...]}},
+  "kospi": {{"labels":["최근3개월 주봉MM/DD 형식"], "data":[...]}},
+  "updated": "{TODAY.strftime('%Y-%m')}"
+}}
+
+- rate: 한국·미국 기준금리(%), 회의 없는 달은 직전값 유지, 2025.01부터 현재까지
+- m2: 한국 M2 총통화량(조원), 약 2개월 발표 시차, 2025.01부터
+- apt: 서울 아파트 매매거래량(건), 전월세 제외, 2025.01부터
+- kospi: 최근 3개월 주봉 종가
+JSON만 출력."""
+
+def fetch_chart_data(client) -> dict:
+    print("월 1회 차트 데이터 업데이트 중...")
+    resp = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=2000,
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 4}],
+        messages=[{"role": "user", "content": CHART_UPDATE_PROMPT}],
+    )
+    raw = ""
+    for block in resp.content:
+        if block.type == "text":
+            raw = block.text
+    raw = raw.strip()
+    if raw.startswith("```"):
+        parts = raw.split("```")
+        raw = parts[1] if len(parts) > 1 else parts[0]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    charts = json.loads(raw.strip())
+    CHART_DATA_FILE.write_text(json.dumps(charts, ensure_ascii=False, indent=2), encoding="utf-8")
+    log.info("차트 데이터 업데이트 완료: %s", charts.get("updated"))
+    print(f"차트 데이터 업데이트 완료 ({charts.get('updated')})")
+    return charts
+
+
 # ══════════════════════════════════════════════════════════════════
 # 1. Claude API로 데이터 수집
 # ══════════════════════════════════════════════════════════════════
@@ -117,16 +191,7 @@ stocks 항목 구조:
 JSON만 출력. 코드블록·설명 없이 순수 JSON만."""
 
 
-def fetch_data() -> dict:
-    try:
-        from anthropic import Anthropic
-    except ImportError:
-        sys.exit("anthropic 패키지 필요: pip install anthropic")
-
-    if not ANTHROPIC_KEY:
-        sys.exit("ANTHROPIC_API_KEY 없음")
-
-    client = Anthropic(api_key=ANTHROPIC_KEY)
+def fetch_data(client) -> dict:
     log.info("Claude API 호출 시작")
     print("뉴스 검색 중... (1~2분 소요)")
 
@@ -237,25 +302,11 @@ def build_archive_links() -> str:
     return links
 
 
-def build_html(data: dict) -> str:
-    # ── 차트 고정 데이터 (월별 발표 기준, 필요시 수동 업데이트) ──────
-    r = {
-        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03","04","05"],
-        "korea":  [3.00,2.75,2.75,2.75,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50,2.50],
-        "us":     [4.38,4.38,4.38,4.38,4.38,4.25,4.00,3.88,3.75,3.75,3.75,3.63,3.63,3.63,3.63,3.63,3.63],
-    }
-    m2 = {
-        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03"],
-        "data":   [4280,4305,4325,4348,4368,4390,4408,4422,4430,4480,4510,4541,4565,4582,4600],
-    }
-    apt = {
-        "labels": ["25.01","02","03","04","05","06","07","08","09","10","11","12","26.01","02","03"],
-        "data":   [174,820,4742,3980,5210,4850,6100,7200,8400,6100,4300,3800,8200,9500,7800],
-    }
-    ksp = {
-        "labels": ["03/09","03/16","03/23","03/30","04/06","04/13","04/21","04/27","05/03","05/11","05/15","05/27"],
-        "data":   [5640,5750,5840,5930,5980,6020,6050,6200,6700,7800,8000,8228],
-    }
+def build_html(data: dict, charts: dict) -> str:
+    r   = charts["rate"]
+    m2  = charts["m2"]
+    apt = charts["apt"]
+    ksp = charts["kospi"]
 
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -466,7 +517,23 @@ def main():
     print(f"=== DailyBrief 업데이트 시작 ({TODAY_KR}) ===")
     log.info("=== 업데이트 시작 %s ===", TODAY_KR)
 
-    # (a) 오늘 dashboard.html → archive/ 에 백업
+    try:
+        from anthropic import Anthropic
+    except ImportError:
+        sys.exit("anthropic 패키지 필요: pip install anthropic")
+    if not ANTHROPIC_KEY:
+        sys.exit("ANTHROPIC_API_KEY 없음")
+    client = Anthropic(api_key=ANTHROPIC_KEY)
+
+    # (a) 차트 데이터 로드 (매월 1일에만 API 갱신)
+    if TODAY.day == 1:
+        charts = fetch_chart_data(client)
+        put_github_file("chart_data.json", CHART_DATA_FILE)
+    else:
+        charts = load_chart_data()
+        print(f"차트 데이터 로드 완료 (최근 갱신: {charts.get('updated','?')})")
+
+    # (b) 오늘 dashboard.html → archive/ 에 백업
     archive_dir = THIS_DIR / "archive"
     archive_dir.mkdir(exist_ok=True)
     src = THIS_DIR / "dashboard.html"
@@ -475,8 +542,8 @@ def main():
         dst.write_bytes(src.read_bytes())
         print(f"아카이브 저장: {dst.name}")
 
-    # (b) Claude로 최신 데이터 수집
-    data = fetch_data()
+    # (c) Claude로 뉴스·종목 데이터 수집
+    data = fetch_data(client)
     print(
         f"수집 완료 — 뉴스 {len(data.get('news',[]))} / "
         f"MZ {len(data.get('mz_trends',[]))} / "
@@ -484,13 +551,13 @@ def main():
         f"주식 {len(data.get('stocks',[]))}"
     )
 
-    # (c) HTML 생성 & 저장
-    html = build_html(data)
+    # (d) HTML 생성 & 저장
+    html = build_html(data, charts)
     (THIS_DIR / "dashboard.html").write_text(html, encoding="utf-8")
     print("dashboard.html 저장 완료")
     log.info("dashboard.html 저장 완료")
 
-    # (d) GitHub Pages 배포
+    # (e) GitHub Pages 배포
     print("GitHub Pages 배포 중...")
     put_github_file("index.html", THIS_DIR / "dashboard.html")
     archive_file = archive_dir / f"{TODAY_ISO}.html"
