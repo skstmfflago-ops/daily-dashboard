@@ -159,6 +159,9 @@ PROMPT = f"""오늘 날짜: {TODAY_KR} ({TODAY_ISO})
 3. 최신성: 오늘~이번 주 발행 자료 우선. 오래된 내용이면 날짜미확인 처리.
 4. 구체성: "상승" → "XX% 상승, 종가 YY원", "호조" → "영업이익 N조원, 전년비 +N%".
 5. 출처: 증권사 리포트·한국경제·매경·파이낸셜뉴스·연합인포맥스·Reuters 우선.
+   source_url은 반드시 해당 기사의 직접 URL(기사 페이지)이어야 함. 홈페이지·카테고리 URL 절대 금지.
+   예시 금지: https://www.hankyung.com, https://www.mk.co.kr/news/
+   예시 허용: https://www.hankyung.com/article/2026053012345, https://news.mt.co.kr/mtview.php?no=2026053000001
 6. 종목별 검색: 각 보유 종목마다 ① 최신 애널리스트 목표가 변경 ② 실적 서프라이즈/쇼크
    ③ 수급 특이사항 ④ 섹터 이슈를 개별적으로 검색할 것.
 7. 주요 뉴스: 글로벌 매크로(연준·환율·유가)·한국 수출입·지정학 이슈 포함.
@@ -181,10 +184,10 @@ PROMPT = f"""오늘 날짜: {TODAY_KR} ({TODAY_ISO})
 ※ 차트 데이터는 포함하지 말 것.
 
 항목 구조 (news·mz_trends·ai_trends 동일):
-{{"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그1","태그2"],"date_type":"today|week|old","date_display":"오늘|MM/DD|YYYY.MM|날짜미확인","source_name":"출처명","source_url":"https://URL"}}
+{{"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그1","태그2"],"date_type":"today|week|old","date_display":"오늘|MM/DD|YYYY.MM|날짜미확인","source_name":"출처명","source_url":"https://기사직접URL"}}
 
 stocks 항목 구조:
-{{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"▲이유","change_type":"up|down|flat","is_important":true,"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그"],"date_type":"today|week|old","date_display":"오늘|MM/DD","source_name":"출처","source_url":"https://URL"}}
+{{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"▲이유","change_type":"up|down|flat","is_important":true,"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그"],"date_type":"today|week|old","date_display":"오늘|MM/DD","source_name":"출처","source_url":"https://기사직접URL"}}
 
 보유 종목: {json.dumps(PORTFOLIO, ensure_ascii=False)}
 
@@ -371,7 +374,7 @@ def build_html(data: dict, charts: dict) -> str:
   <div class="header-center">
     <div class="date-badge">{TODAY_KR}</div>
     <span class="live-dot"></span>
-    <span style="font-size:11px;color:var(--sub);">매일 오전 6시 자동 업데이트</span>
+    <span style="font-size:11px;color:var(--sub);">매일 자정 자동 업데이트</span>
   </div>
   <div class="header-right">skstmfflago-ops</div>
 </header>
@@ -454,7 +457,7 @@ def build_html(data: dict, charts: dict) -> str:
 </div>
 
 </div>
-<footer>DailyBrief · {TODAY.strftime('%Y.%m.%d')} · 매일 오전 6시 자동 업데이트 · <a href="https://skstmfflago-ops.github.io/daily-dashboard/" style="color:var(--sub);text-decoration:none;">skstmfflago-ops.github.io/daily-dashboard</a></footer>
+<footer>DailyBrief · {TODAY.strftime('%Y.%m.%d')} · 매일 자정 자동 업데이트 · <a href="https://skstmfflago-ops.github.io/daily-dashboard/" style="color:var(--sub);text-decoration:none;">skstmfflago-ops.github.io/daily-dashboard</a></footer>
 
 <script>
 const G={{color:'#8b90b0',grid:'rgba(46,50,80,.45)',font:{{size:10}}}};
