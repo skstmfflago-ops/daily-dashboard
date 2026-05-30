@@ -113,7 +113,7 @@ PROMPT = f"""오늘 날짜: {TODAY_KR} ({TODAY_ISO})
 뉴스/트렌드 항목 구조:
 {{
   "title":        "제목 (40자 이내)",
-  "body":         "2~3문장 요약",
+  "body":         "핵심만 1~2문장, 각 문장 40자 이내",
   "tags":         ["태그1","태그2"],
   "date_type":    "today|week|old",
   "date_display": "오늘|MM/DD|YYYY.MM|날짜미확인",
@@ -164,7 +164,7 @@ def fetch_data() -> dict:
 
     resp = client.messages.create(
         model="claude-sonnet-4-5",
-        max_tokens=8000,
+        max_tokens=12000,
         tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
         messages=[{"role": "user", "content": PROMPT}],
     )
