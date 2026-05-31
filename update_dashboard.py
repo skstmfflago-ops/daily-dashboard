@@ -153,13 +153,26 @@ PROMPT = f"""오늘 날짜: {TODAY_KR} ({TODAY_ISO})
 당신은 국내 Top-tier 증권사 리서치센터 수석 애널리스트입니다.
 웹 검색으로 오늘 기준 최신 정보를 꼼꼼히 수집하고, 아래 JSON 형식으로만 응답하세요.
 
-━━ 절대 원칙 (위반 시 응답 전체 무효) ━━
-0. 창작·추정·합성 절대 금지: 웹 검색으로 직접 열람한 기사·보고서 내용만 포함.
-   검색 결과에 없는 내용, 그럴듯하게 만들어낸 수치·사건은 단 한 줄도 쓰지 말 것.
-   수치(목표가·영업이익·주가 등)는 기사 원문 숫자를 그대로 인용. 계산·추정 금지.
-   종목 업종 확인 필수: "에이피알"은 뷰티/화장품 기업, "SK하이닉스"는 반도체 기업.
-   종목명이 일치해도 업종이 다른 기사는 혼동하지 말 것.
-   신뢰할 기사를 찾지 못한 종목은 stocks 배열에서 아예 제외.
+━━ 절대 원칙 ━━
+【할루시네이션 금지】
+- 웹 검색으로 직접 열람·확인한 기사만 포함. 추측·창작·합성 전면 금지.
+- 수치(목표가·주가·영업이익 등)는 기사 원문 숫자 그대로만 인용. 계산·추정 불가.
+- 기사를 찾지 못한 항목은 빈칸으로 두거나 배열에서 제외. 절대로 지어내지 말 것.
+
+【종목 업종 혼동 금지】
+- SK하이닉스: 반도체(HBM·DRAM), 목표주가 현재 200만원 이상 수준
+- 삼성전자: 반도체·스마트폰·가전
+- 삼성전기: MLCC·기판(전자부품), 뷰티·배터리 무관
+- 현대자동차: 완성차·전기차, 배터리셀 직접 제조 아님
+- 에이피알: 뷰티·화장품(메디큐브·에이프릴스킨), 배터리·2차전지 전혀 무관
+- 삼양식품: 불닭볶음면·라면, 화학·배터리 무관
+- 테슬라(TSLA): 전기차·자율주행·에너지저장
+- 알파벳(GOOGL): 구글·YouTube·Waymo·클라우드
+
+【출처 URL 규칙】
+- source_url은 해당 기사 페이지 직접 URL만 허용.
+- 도메인 루트(예: hankyung.com) 또는 카테고리 페이지 절대 금지.
+- 검색 결과에서 실제로 클릭·열람한 URL만 사용.
 
 ━━ 검색 품질 기준 ━━
 1. 날짜 검증: 모든 기사의 실제 발행일을 URL 직접 접속으로 확인. 추정 금지.
@@ -223,7 +236,6 @@ def fetch_data(client) -> dict:
             raw = raw[4:]
     raw = raw.strip()
 
-    # JSON 파싱 실패 시 원문 출력 (디버그용)
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
@@ -231,6 +243,30 @@ def fetch_data(client) -> dict:
         print(f"[응답 길이] {len(raw)} chars")
         print(f"[응답 마지막 200자] ...{raw[-200:]}")
         raise
+
+    # ── 출처 URL 검증: 도메인 루트 URL 걸러내기 ──────────────────
+    def _is_article_url(url: str) -> bool:
+        if not url or not url.startswith("http"):
+            return False
+        from urllib.parse import urlparse
+        p = urlparse(url)
+        # path가 없거나 "/" 하나뿐이면 홈페이지
+        return len(p.path.strip("/")) > 5
+
+    def _clean_items(items: list) -> list:
+        cleaned = []
+        for it in items:
+            url = it.get("source_url", "")
+            if not _is_article_url(url):
+                log.warning("홈페이지 URL 제거: %s → %s", it.get("title",""), url)
+                it["source_url"] = "#"
+                it["source_name"] = "출처미확인"
+            cleaned.append(it)
+        return cleaned
+
+    for key in ("news", "mz_trends", "ai_trends", "stocks"):
+        if key in data:
+            data[key] = _clean_items(data[key])
 
     log.info(
         "수집 완료: 뉴스 %d / MZ %d / AI %d / 주식 %d",
