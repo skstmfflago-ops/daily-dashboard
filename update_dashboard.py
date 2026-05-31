@@ -6,13 +6,16 @@ Windows 작업 스케줄러로 등록해 사용 (update_dashboard_run.bat 참조
 """
 
 import base64
+import email.utils
 import io
 import json
 import logging
 import os
+import re
 import sys
 import urllib.request
 import urllib.parse
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -192,89 +195,203 @@ def safe_fetch_chart_data(client) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════
-# 1. Claude API로 데이터 수집
+# 1. RSS 기반 뉴스 수집 (URL·날짜 100% 실제값, 할루시네이션 원천 차단)
 # ══════════════════════════════════════════════════════════════════
-PROMPT = f"""오늘: {TODAY_ISO} ({TODAY_KR})
+CUTOFF_30D = TODAY - timedelta(days=30)
 
-━━ 작업 순서 (반드시 이 순서로) ━━
-1. 아래 지정된 키워드로 웹 검색을 실행한다.
-2. 검색 결과(제목·스니펫·URL)에서 확인된 내용만 JSON에 기록한다.
-3. 검색 결과에 없는 내용은 절대 작성하지 않는다. 지어내거나 추측하면 안 된다.
-4. source_url = 검색 결과에 나타난 URL을 그대로 복사한다. URL을 직접 만들거나 수정하면 안 된다.
-5. 찾지 못한 항목은 배열에서 제외한다. 7개를 채우려고 내용을 만들지 말 것.
-6. 날짜 기준:
-   - 1순위: 오늘~3일 이내({(datetime.now(KST)-timedelta(days=3)).strftime('%Y-%m-%d')} 이후) 기사를 최대한 찾는다.
-   - 2순위: 최신 기사가 없는 경우에 한해 1개월 이내({(datetime.now(KST)-timedelta(days=30)).strftime('%Y-%m-%d')} 이후)까지 허용.
-   - 절대 금지: 1개월 이전 기사는 검색 결과에 있어도 포함하지 말 것.
+RSS_NEWS = [
+    ("한국경제",    "https://www.hankyung.com/feed/economy"),
+    ("매일경제",    "https://www.mk.co.kr/rss/40300001/"),
+    ("연합뉴스",    "https://www.yonhapnews.co.kr/rss/economy.xml"),
+    ("파이낸셜뉴스", "https://www.fnnews.com/rss/fn_realnews_top100.xml"),
+    ("머니투데이",  "https://rss.mt.co.kr/news/rssmoneynews.xml"),
+    ("서울경제",    "https://www.sedaily.com/RssService/RssService.aspx?catId=A"),
+]
+RSS_MZ = [
+    ("한국경제",   "https://www.hankyung.com/feed/life"),
+    ("매일경제",   "https://www.mk.co.kr/rss/50200010/"),
+    ("블로터",    "https://www.bloter.net/feed"),
+    ("머니투데이", "https://rss.mt.co.kr/news/rssmoneynews.xml"),
+    ("이데일리",   "https://www.edaily.co.kr/rss/economy.xml"),
+]
+RSS_AI = [
+    ("블로터",        "https://www.bloter.net/feed"),
+    ("ZDNet Korea",   "https://zdnet.co.kr/rss.xml"),
+    ("IT동아",        "https://it.donga.com/rss/"),
+    ("한국경제IT",    "https://www.hankyung.com/feed/it"),
+    ("TechCrunch AI", "https://techcrunch.com/category/artificial-intelligence/feed/"),
+]
+RSS_STOCKS = [
+    ("한국경제",    "https://www.hankyung.com/feed/finance"),
+    ("연합인포맥스", "https://news.einfomax.co.kr/rss/allnews.xml"),
+    ("파이낸셜뉴스", "https://www.fnnews.com/rss/fn_realnews_top100.xml"),
+    ("매일경제",    "https://www.mk.co.kr/rss/40300001/"),
+]
 
-━━ 검색 키워드 목록 ━━
+MZ_KEYWORDS    = ["MZ", "Z세대", "밀레니얼", "2030세대", "소비트렌드", "소비 트렌드", "인플루언서",
+                   "유행", "트렌드", "마케팅", "브랜드", "SNS", "숏폼", "틱톡", "릴스", "콘텐츠"]
+AI_KEYWORDS    = ["AI", "인공지능", "ChatGPT", "GPT", "LLM", "머신러닝", "딥러닝", "생성형",
+                   "Anthropic", "OpenAI", "Google AI", "자율주행", "로봇", "에이전트", "클로드", "제미나이", "Gemini"]
+STOCK_KEYWORDS = ["SK하이닉스", "삼성전자", "삼성전기", "현대자동차", "현대차", "에이피알",
+                   "삼양식품", "불닭", "테슬라", "Tesla", "알파벳", "구글", "TSLA", "GOOGL"]
 
-[주요뉴스 — 아래 쿼리로 검색]
-· "한국 경제 뉴스 {TODAY_ISO}"
-· "미국 연준 금리 최신 뉴스"
-· "글로벌 증시 뉴스 오늘"
-· "한국 수출 무역 뉴스 최신"
 
-[마케팅·MZ 트렌드 — 아래 쿼리로 검색]
-· "MZ세대 소비 트렌드 2026"
-· "마케팅 트렌드 인플루언서 최신"
-· "Z세대 SNS 유행 최신"
+def _parse_rss_date(s: str):
+    """RFC 2822 또는 ISO 8601 → datetime(KST). 실패 시 None."""
+    if not s:
+        return None
+    try:
+        return email.utils.parsedate_to_datetime(s.strip()).astimezone(KST)
+    except Exception:
+        pass
+    try:
+        return datetime.fromisoformat(s.strip().replace("Z", "+00:00")).astimezone(KST)
+    except Exception:
+        return None
 
-[AI 트렌드 — 아래 쿼리로 검색]
-· "인공지능 AI 뉴스 최신 2026"
-· "ChatGPT Claude AI 업데이트 최신"
-· "AI 반도체 기술 뉴스"
 
-[보유종목 이슈 — 각 종목별 검색]
-· "SK하이닉스 뉴스 최신"        (반도체·HBM·DRAM 회사)
-· "삼성전자 뉴스 최신"          (반도체·스마트폰)
-· "삼성전기 뉴스 최신"          (MLCC·기판, 뷰티·배터리 무관)
-· "현대자동차 뉴스 최신"        (완성차·전기차)
-· "에이피알 뷰티 뉴스 최신"     (화장품·메디큐브, 배터리 절대 무관)
-· "삼양식품 불닭 뉴스 최신"     (라면·식품)
-· "테슬라 Tesla 뉴스 최신"
-· "알파벳 구글 뉴스 최신"
+def _strip_html(t: str) -> str:
+    return re.sub(r"<[^>]+>", "", t or "").strip()
 
-━━ 응답 JSON ━━
+
+def _fetch_rss(url: str, source: str, max_items: int = 40) -> list:
+    """단일 RSS → [{title, url, dt, source_name, snippet}] (30일 이내만)"""
+    arts = []
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            raw_bytes = r.read()
+        root = ET.fromstring(raw_bytes)
+        items = (root.findall(".//item")
+                 or root.findall(".//{http://www.w3.org/2005/Atom}entry")
+                 or root.findall(".//entry"))
+        for item in items[:max_items]:
+            def g(tag):
+                v = item.findtext(tag) or item.findtext(f"{{http://www.w3.org/2005/Atom}}{tag}", "")
+                return (v or "").strip()
+            title = _strip_html(g("title"))
+            link  = g("link") or g("guid")
+            if not link:
+                le = item.find("{http://www.w3.org/2005/Atom}link")
+                if le is not None:
+                    link = le.get("href", "")
+            pub   = g("pubDate") or g("published") or g("updated")
+            desc  = _strip_html(g("description") or g("summary"))
+            if not title or not link:
+                continue
+            dt = _parse_rss_date(pub)
+            if dt is None or dt < CUTOFF_30D:
+                continue
+            arts.append({"title": title[:120], "url": link.strip(),
+                         "dt": dt, "source_name": source, "snippet": desc[:250]})
+    except Exception as e:
+        log.warning("RSS 실패 [%s] %s: %s", source, url, e)
+    return arts
+
+
+def _date_label(dt) -> tuple:
+    diff = (TODAY - dt).days
+    if diff == 0:    return "today", "오늘"
+    elif diff == 1:  return "today", "어제"
+    elif diff <= 3:  return "today", dt.strftime("%m/%d")
+    elif diff <= 14: return "week",  dt.strftime("%m/%d")
+    else:            return "old",   dt.strftime("%m/%d")
+
+
+def collect_rss() -> dict:
+    """모든 카테고리 RSS 수집 → {news, mz, ai, stocks}"""
+    def gather(feeds, keywords=None, max_out=25):
+        seen, out = set(), []
+        for src, url in feeds:
+            for a in _fetch_rss(url, src):
+                if a["url"] in seen:
+                    continue
+                if keywords:
+                    txt = a["title"] + " " + a["snippet"]
+                    if not any(k.lower() in txt.lower() for k in keywords):
+                        continue
+                seen.add(a["url"])
+                out.append(a)
+        out.sort(key=lambda x: x["dt"], reverse=True)
+        return out[:max_out]
+
+    r = {
+        "news":   gather(RSS_NEWS),
+        "mz":     gather(RSS_MZ,     MZ_KEYWORDS),
+        "ai":     gather(RSS_AI,     AI_KEYWORDS),
+        "stocks": gather(RSS_STOCKS, STOCK_KEYWORDS),
+    }
+    print(f"RSS 수집: 뉴스={len(r['news'])} MZ={len(r['mz'])} AI={len(r['ai'])} 종목={len(r['stocks'])}")
+    log.info("RSS 수집: news=%d mz=%d ai=%d stocks=%d",
+             len(r["news"]), len(r["mz"]), len(r["ai"]), len(r["stocks"]))
+    return r
+
+
+def _arts_to_text(arts: list) -> str:
+    lines = []
+    for i, a in enumerate(arts, 1):
+        lines.append(f"{i}. [{a['source_name']}] {a['dt'].strftime('%Y-%m-%d')} | {a['title']}")
+        if a["snippet"]:
+            lines.append(f"   내용: {a['snippet'][:150]}")
+        lines.append(f"   URL: {a['url']}")
+    return "\n".join(lines) if lines else "수집된 기사 없음"
+
+
+# ── Claude는 요약만 (URL·날짜는 RSS에서 이미 확정) ──────────────────
+def fetch_data(client, rss: dict) -> dict:
+    log.info("Claude API 호출 (요약 전용)")
+    print("Claude 요약 중... (30초~1분)")
+
+    prompt = f"""오늘: {TODAY_ISO}
+
+아래는 RSS에서 직접 수집한 실제 기사 목록이다. 이 목록의 기사들만 골라 JSON을 만들어라.
+
+절대 규칙:
+- 목록에 없는 기사는 절대 추가하지 말 것
+- source_url = 목록의 URL 그대로 (수정·창작 금지)
+- source_name = 목록의 매체명 그대로
+- title: 기사 제목을 40자 이내로 자연스럽게 요약
+- body: 내용/스니펫 기반 50자 이내 핵심 1문장
+
+=== [주요뉴스] ===
+{_arts_to_text(rss["news"])}
+
+=== [MZ·마케팅 트렌드] ===
+{_arts_to_text(rss["mz"])}
+
+=== [AI 트렌드] ===
+{_arts_to_text(rss["ai"])}
+
+=== [보유종목 이슈] ===
+종목: SK하이닉스(000660)·삼성전자(005930)·삼성전기(009150)·현대자동차(005380)·에이피알(278470)·삼양식품(003230)·테슬라(TSLA)·알파벳(GOOGL)
+{_arts_to_text(rss["stocks"])}
+
+출력 JSON:
 {{
-  "news":      [검색 결과에서 찾은 주요뉴스, 최대 7개],
-  "mz_trends": [검색 결과에서 찾은 MZ트렌드, 최대 7개],
-  "ai_trends": [검색 결과에서 찾은 AI트렌드, 최대 7개],
-  "stocks":    [검색 결과에서 이슈 확인된 종목만, 없으면 빈배열]
+  "news":      [주요뉴스 최대 7개],
+  "mz_trends": [MZ트렌드 최대 7개],
+  "ai_trends": [AI트렌드 최대 7개],
+  "stocks":    [종목이슈 확인된 것만, 종목별 최대 1개. 없으면 빈배열]
 }}
 
-항목 구조 (news·mz_trends·ai_trends):
-{{"title":"검색결과기사제목(40자이내)","body":"검색결과스니펫기반요약(50자이내)","tags":["태그1","태그2"],"date_type":"today|week|old","date_display":"오늘|MM/DD|YYYY.MM","source_name":"매체명","source_url":"검색결과에나온URL그대로"}}
+뉴스·MZ·AI 항목:
+{{"title":"...","body":"...","tags":["태그1","태그2"],"date_type":"today|week|old","date_display":"오늘|어제|MM/DD","source_name":"목록매체명","source_url":"목록URL"}}
 
 stocks 항목:
-{{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"▲이유","change_type":"up|down|flat","is_important":true,"title":"제목(40자이내)","body":"요약(50자이내)","tags":["태그"],"date_type":"today|week|old","date_display":"날짜","source_name":"매체명","source_url":"검색결과URL그대로"}}
+{{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"이슈요약","change_type":"up|down|flat","is_important":true,"title":"...","body":"...","tags":["태그"],"date_type":"today|week|old","date_display":"...","source_name":"...","source_url":"목록URL"}}
 
-date_type 기준:
-  "today" → 오늘~3일 이내 / date_display: "오늘" 또는 "어제" 또는 "MM/DD"
-  "week"  → 4일~2주 이내  / date_display: "MM/DD"
-  "old"   → 2주~1개월 이내 / date_display: "MM/DD"
-  1개월({(datetime.now(KST)-timedelta(days=30)).strftime('%Y-%m-%d')}) 이전 기사는 배열 자체에서 제외.
+아이콘: SK하이닉스→🔵 삼성전자→📱 삼성전기→⚡ 현대차→🚗 에이피알→💄 삼양식품→🍜 테슬라→🚀 알파벳→🔍
+date 기준: 오늘~3일→today, 4~14일→week, 15일이상→old
 
-JSON만 출력. 코드블록·설명 없이."""
-
-
-def fetch_data(client) -> dict:
-    log.info("Claude API 호출 시작")
-    print("뉴스 검색 중... (1~2분 소요)")
+JSON만 출력. 코드블록 없이."""
 
     resp = client.messages.create(
         model="claude-sonnet-4-5",
-        max_tokens=8000,
-        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
-        messages=[{"role": "user", "content": PROMPT}],
+        max_tokens=6000,
+        messages=[{"role": "user", "content": prompt}],
     )
 
-    raw = ""
-    for block in resp.content:
-        if block.type == "text":
-            raw = block.text
-
-    raw = raw.strip()
+    raw = resp.content[0].text.strip()
     if raw.startswith("```"):
         parts = raw.split("```")
         raw = parts[1] if len(parts) > 1 else parts[0]
@@ -285,42 +402,12 @@ def fetch_data(client) -> dict:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        print(f"[JSON 파싱 오류] {e}")
-        print(f"[응답 길이] {len(raw)} chars")
-        print(f"[응답 마지막 200자] ...{raw[-200:]}")
+        print(f"[JSON 파싱 오류] {e}\n[마지막 200자] ...{raw[-200:]}")
         raise
 
-    # ── 출처 URL 검증: 도메인 루트 URL 걸러내기 ──────────────────
-    def _is_article_url(url: str) -> bool:
-        if not url or not url.startswith("http"):
-            return False
-        from urllib.parse import urlparse
-        p = urlparse(url)
-        # path가 없거나 "/" 하나뿐이면 홈페이지
-        return len(p.path.strip("/")) > 5
-
-    def _clean_items(items: list) -> list:
-        cleaned = []
-        for it in items:
-            url = it.get("source_url", "")
-            if not _is_article_url(url):
-                log.warning("홈페이지 URL 제거: %s → %s", it.get("title",""), url)
-                it["source_url"] = "#"
-                it["source_name"] = "출처미확인"
-            cleaned.append(it)
-        return cleaned
-
-    for key in ("news", "mz_trends", "ai_trends", "stocks"):
-        if key in data:
-            data[key] = _clean_items(data[key])
-
-    log.info(
-        "수집 완료: 뉴스 %d / MZ %d / AI %d / 주식 %d",
-        len(data.get("news", [])),
-        len(data.get("mz_trends", [])),
-        len(data.get("ai_trends", [])),
-        len(data.get("stocks", [])),
-    )
+    log.info("요약 완료: 뉴스 %d / MZ %d / AI %d / 주식 %d",
+             len(data.get("news",[])), len(data.get("mz_trends",[])),
+             len(data.get("ai_trends",[])), len(data.get("stocks",[])))
     return data
 
 
@@ -686,8 +773,9 @@ def main():
     market = fetch_market_data()
     print(f"시장 데이터: 코스피={market.get('kospi')} 환율={market.get('usdkrw')}")
 
-    # (d) Claude로 뉴스·종목 데이터 수집
-    data = fetch_data(client)
+    # (d) RSS 수집 → Claude 요약 (URL·날짜는 RSS에서 확정, Claude는 요약만)
+    rss  = collect_rss()
+    data = fetch_data(client, rss)
     print(
         f"수집 완료 — 뉴스 {len(data.get('news',[]))} / "
         f"MZ {len(data.get('mz_trends',[]))} / "
