@@ -124,7 +124,7 @@ def fetch_chart_data(client) -> dict:
     print("월 1회 차트 데이터 업데이트 중...")
     resp = client.messages.create(
         model="claude-sonnet-4-5",
-        max_tokens=2000,
+        max_tokens=3000,
         tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 4}],
         messages=[{"role": "user", "content": CHART_UPDATE_PROMPT}],
     )
@@ -143,6 +143,16 @@ def fetch_chart_data(client) -> dict:
     log.info("차트 데이터 업데이트 완료: %s", charts.get("updated"))
     print(f"차트 데이터 업데이트 완료 ({charts.get('updated')})")
     return charts
+
+
+def safe_fetch_chart_data(client) -> dict:
+    """차트 업데이트 실패 시 기존 데이터로 안전하게 폴백"""
+    try:
+        return fetch_chart_data(client)
+    except Exception as e:
+        log.warning("차트 업데이트 실패, 기존 데이터 사용: %s", e)
+        print(f"[경고] 차트 업데이트 실패 → 기존 데이터 사용 ({e})")
+        return load_chart_data()
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -571,8 +581,9 @@ def main():
 
     # (a) 차트 데이터 로드 (매월 1일에만 API 갱신)
     if TODAY.day == 1:
-        charts = fetch_chart_data(client)
-        put_github_file("chart_data.json", CHART_DATA_FILE)
+        charts = safe_fetch_chart_data(client)
+        if CHART_DATA_FILE.exists():
+            put_github_file("chart_data.json", CHART_DATA_FILE)
     else:
         charts = load_chart_data()
         print(f"차트 데이터 로드 완료 (최근 갱신: {charts.get('updated','?')})")
