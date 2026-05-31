@@ -194,69 +194,61 @@ def safe_fetch_chart_data(client) -> dict:
 # ══════════════════════════════════════════════════════════════════
 # 1. Claude API로 데이터 수집
 # ══════════════════════════════════════════════════════════════════
-PROMPT = f"""오늘 날짜: {TODAY_KR} ({TODAY_ISO})
+PROMPT = f"""오늘: {TODAY_ISO} ({TODAY_KR})
 
-당신은 국내 Top-tier 증권사 리서치센터 수석 애널리스트입니다.
-웹 검색으로 오늘 기준 최신 정보를 꼼꼼히 수집하고, 아래 JSON 형식으로만 응답하세요.
+━━ 작업 순서 (반드시 이 순서로) ━━
+1. 아래 지정된 키워드로 웹 검색을 실행한다.
+2. 검색 결과(제목·스니펫·URL)에서 확인된 내용만 JSON에 기록한다.
+3. 검색 결과에 없는 내용은 절대 작성하지 않는다. 지어내거나 추측하면 안 된다.
+4. source_url = 검색 결과에 나타난 URL을 그대로 복사한다. URL을 직접 만들거나 수정하면 안 된다.
+5. 찾지 못한 항목은 배열에서 제외한다. 7개를 채우려고 내용을 만들지 말 것.
+6. 1주일 이내({(datetime.now(KST)-timedelta(days=7)).strftime('%Y-%m-%d')} 이후) 기사만 포함.
 
-━━ 절대 원칙 ━━
-【할루시네이션 금지】
-- 웹 검색으로 직접 열람·확인한 기사만 포함. 추측·창작·합성 전면 금지.
-- 수치(목표가·주가·영업이익 등)는 기사 원문 숫자 그대로만 인용. 계산·추정 불가.
-- 기사를 찾지 못한 항목은 빈칸으로 두거나 배열에서 제외. 절대로 지어내지 말 것.
+━━ 검색 키워드 목록 ━━
 
-【종목 업종 혼동 금지】
-- SK하이닉스: 반도체(HBM·DRAM), 목표주가 현재 200만원 이상 수준
-- 삼성전자: 반도체·스마트폰·가전
-- 삼성전기: MLCC·기판(전자부품), 뷰티·배터리 무관
-- 현대자동차: 완성차·전기차, 배터리셀 직접 제조 아님
-- 에이피알: 뷰티·화장품(메디큐브·에이프릴스킨), 배터리·2차전지 전혀 무관
-- 삼양식품: 불닭볶음면·라면, 화학·배터리 무관
-- 테슬라(TSLA): 전기차·자율주행·에너지저장
-- 알파벳(GOOGL): 구글·YouTube·Waymo·클라우드
+[주요뉴스 — 아래 쿼리로 검색]
+· "한국 경제 뉴스 {TODAY_ISO}"
+· "미국 연준 금리 최신 뉴스"
+· "글로벌 증시 뉴스 오늘"
+· "한국 수출 무역 뉴스 최신"
 
-【출처 URL 규칙】
-- source_url은 해당 기사 페이지 직접 URL만 허용.
-- 도메인 루트(예: hankyung.com) 또는 카테고리 페이지 절대 금지.
-- 검색 결과에서 실제로 클릭·열람한 URL만 사용.
+[마케팅·MZ 트렌드 — 아래 쿼리로 검색]
+· "MZ세대 소비 트렌드 2026"
+· "마케팅 트렌드 인플루언서 최신"
+· "Z세대 SNS 유행 최신"
 
-━━ 검색 품질 기준 ━━
-1. 날짜 검증: 모든 기사의 실제 발행일을 URL 직접 접속으로 확인. 추정 금지.
-2. 증권가 시각: 주가·목표가·실적·밸류에이션 관점에서 해석.
-3. 최신성: 오늘~이번 주 발행 자료 우선. 오래된 내용이면 날짜미확인 처리.
-4. 구체성: 수치는 반드시 원문 그대로 인용.
-   코스피 지수·환율·종목 주가는 절대 직접 언급하지 말 것 (별도 API로 처리).
-5. 출처: 증권사 리포트·한국경제·매경·파이낸셜뉴스·연합인포맥스·Reuters 우선.
-   source_url은 반드시 해당 기사의 직접 URL. 홈페이지·카테고리 URL 절대 금지.
-6. 종목별 검색: 각 종목마다 ① 목표가 변경 ② 실적 ③ 섹터 이슈를 개별 검색.
-7. 주요 뉴스: 글로벌 매크로(연준·환율·유가)·한국 수출입·지정학 이슈 포함.
+[AI 트렌드 — 아래 쿼리로 검색]
+· "인공지능 AI 뉴스 최신 2026"
+· "ChatGPT Claude AI 업데이트 최신"
+· "AI 반도체 기술 뉴스"
 
-━━ 날짜 표기 규칙 ━━
-- 오늘 발행  → date_type:"today",  date_display:"오늘"
-- 이번주 발행 → date_type:"week",   date_display:"MM/DD" (예: "05/03")
-- 그보다 오래 → date_type:"old",    date_display:"YYYY.MM" (예: "2026.03")
-- 날짜 확인 불가 → date_type:"old", date_display:"날짜미확인"
-반드시 링크 접속 후 실제 발행일을 확인하고 표기할 것.
+[보유종목 이슈 — 각 종목별 검색]
+· "SK하이닉스 뉴스 최신"        (반도체·HBM·DRAM 회사)
+· "삼성전자 뉴스 최신"          (반도체·스마트폰)
+· "삼성전기 뉴스 최신"          (MLCC·기판, 뷰티·배터리 무관)
+· "현대자동차 뉴스 최신"        (완성차·전기차)
+· "에이피알 뷰티 뉴스 최신"     (화장품·메디큐브, 배터리 절대 무관)
+· "삼양식품 불닭 뉴스 최신"     (라면·식품)
+· "테슬라 Tesla 뉴스 최신"
+· "알파벳 구글 뉴스 최신"
 
-━━ 응답 JSON 구조 ━━
+━━ 응답 JSON ━━
 {{
-  "news":      [주요뉴스 7개],
-  "mz_trends": [마케팅·MZ·소비 트렌드 7개],
-  "ai_trends": [AI 기술·산업 트렌드 7개],
-  "stocks":    [중요 이슈 있는 보유 종목만. 이슈 없으면 빈 배열]
+  "news":      [검색 결과에서 찾은 주요뉴스, 최대 7개],
+  "mz_trends": [검색 결과에서 찾은 MZ트렌드, 최대 7개],
+  "ai_trends": [검색 결과에서 찾은 AI트렌드, 최대 7개],
+  "stocks":    [검색 결과에서 이슈 확인된 종목만, 없으면 빈배열]
 }}
 
-※ 차트 데이터는 포함하지 말 것.
+항목 구조 (news·mz_trends·ai_trends):
+{{"title":"검색결과기사제목(40자이내)","body":"검색결과스니펫기반요약(50자이내)","tags":["태그1","태그2"],"date_type":"today|week|old","date_display":"오늘|MM/DD|YYYY.MM","source_name":"매체명","source_url":"검색결과에나온URL그대로"}}
 
-항목 구조 (news·mz_trends·ai_trends 동일):
-{{"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그1","태그2"],"date_type":"today|week|old","date_display":"오늘|MM/DD|YYYY.MM|날짜미확인","source_name":"출처명","source_url":"https://기사직접URL"}}
+stocks 항목:
+{{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"▲이유","change_type":"up|down|flat","is_important":true,"title":"제목(40자이내)","body":"요약(50자이내)","tags":["태그"],"date_type":"today|week|old","date_display":"날짜","source_name":"매체명","source_url":"검색결과URL그대로"}}
 
-stocks 항목 구조:
-{{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"▲이유","change_type":"up|down|flat","is_important":true,"title":"제목(40자이내)","body":"핵심 1문장(50자이내)","tags":["태그"],"date_type":"today|week|old","date_display":"오늘|MM/DD","source_name":"출처","source_url":"https://기사직접URL"}}
+date_type 기준: 오늘 발행→"today"/오늘표시, 이번주→"week"/MM/DD, 그 이전→"old"/YYYY.MM
 
-보유 종목: {json.dumps(PORTFOLIO, ensure_ascii=False)}
-
-JSON만 출력. 코드블록·설명 없이 순수 JSON만."""
+JSON만 출력. 코드블록·설명 없이."""
 
 
 def fetch_data(client) -> dict:
@@ -688,6 +680,7 @@ def main():
     print(f"시장 데이터: 코스피={market.get('kospi')} 환율={market.get('usdkrw')}")
 
     # (d) Claude로 뉴스·종목 데이터 수집
+    data = fetch_data(client)
     print(
         f"수집 완료 — 뉴스 {len(data.get('news',[]))} / "
         f"MZ {len(data.get('mz_trends',[]))} / "
@@ -695,13 +688,13 @@ def main():
         f"주식 {len(data.get('stocks',[]))}"
     )
 
-    # (d) HTML 생성 & 저장
+    # (f) HTML 생성 & 저장
     html = build_html(data, charts, market)
     (THIS_DIR / "dashboard.html").write_text(html, encoding="utf-8")
     print("dashboard.html 저장 완료")
     log.info("dashboard.html 저장 완료")
 
-    # (e) GitHub Pages 배포
+    # (g) GitHub Pages 배포
     print("GitHub Pages 배포 중...")
     put_github_file("index.html", THIS_DIR / "dashboard.html")
     archive_file = archive_dir / f"{TODAY_ISO}.html"
