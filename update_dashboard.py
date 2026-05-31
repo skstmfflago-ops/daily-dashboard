@@ -202,7 +202,10 @@ PROMPT = f"""오늘: {TODAY_ISO} ({TODAY_KR})
 3. 검색 결과에 없는 내용은 절대 작성하지 않는다. 지어내거나 추측하면 안 된다.
 4. source_url = 검색 결과에 나타난 URL을 그대로 복사한다. URL을 직접 만들거나 수정하면 안 된다.
 5. 찾지 못한 항목은 배열에서 제외한다. 7개를 채우려고 내용을 만들지 말 것.
-6. 1주일 이내({(datetime.now(KST)-timedelta(days=7)).strftime('%Y-%m-%d')} 이후) 기사만 포함.
+6. 날짜 기준:
+   - 1순위: 오늘~3일 이내({(datetime.now(KST)-timedelta(days=3)).strftime('%Y-%m-%d')} 이후) 기사를 최대한 찾는다.
+   - 2순위: 최신 기사가 없는 경우에 한해 1개월 이내({(datetime.now(KST)-timedelta(days=30)).strftime('%Y-%m-%d')} 이후)까지 허용.
+   - 절대 금지: 1개월 이전 기사는 검색 결과에 있어도 포함하지 말 것.
 
 ━━ 검색 키워드 목록 ━━
 
@@ -246,7 +249,11 @@ PROMPT = f"""오늘: {TODAY_ISO} ({TODAY_KR})
 stocks 항목:
 {{"ticker":"코드","company":"회사명","icon":"이모지","change_label":"▲이유","change_type":"up|down|flat","is_important":true,"title":"제목(40자이내)","body":"요약(50자이내)","tags":["태그"],"date_type":"today|week|old","date_display":"날짜","source_name":"매체명","source_url":"검색결과URL그대로"}}
 
-date_type 기준: 오늘 발행→"today"/오늘표시, 이번주→"week"/MM/DD, 그 이전→"old"/YYYY.MM
+date_type 기준:
+  "today" → 오늘~3일 이내 / date_display: "오늘" 또는 "어제" 또는 "MM/DD"
+  "week"  → 4일~2주 이내  / date_display: "MM/DD"
+  "old"   → 2주~1개월 이내 / date_display: "MM/DD"
+  1개월({(datetime.now(KST)-timedelta(days=30)).strftime('%Y-%m-%d')}) 이전 기사는 배열 자체에서 제외.
 
 JSON만 출력. 코드블록·설명 없이."""
 
