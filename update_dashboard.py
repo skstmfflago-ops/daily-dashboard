@@ -343,14 +343,40 @@ def stock_section(stocks: list) -> str:
 
 
 def build_archive_links() -> str:
+    """로컬 archive/ 폴더 + GitHub API 두 곳에서 아카이브 목록 수집"""
     archive_dir = THIS_DIR / "archive"
     archive_dir.mkdir(exist_ok=True)
-    files = sorted(archive_dir.glob("*.html"), reverse=True)
-    links = f'<a class="archive-link active" href="index.html">{TODAY_SHORT}</a>\n'
-    for f in files[:10]:
+
+    # 로컬 파일 목록
+    stems = set()
+    for f in archive_dir.glob("*.html"):
+        stems.add(f.stem)
+
+    # GitHub API에서도 목록 조회 (로컬에 없을 수 있음)
+    if GITHUB_TOKEN:
         try:
-            dt = datetime.strptime(f.stem, "%Y-%m-%d")
-            links += f'  <a class="archive-link" href="archive/{f.stem}.html">{dt.strftime("%m/%d")}</a>\n'
+            url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/archive"
+            hdrs = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+            req = urllib.request.Request(url, headers=hdrs)
+            with urllib.request.urlopen(req) as r:
+                for item in json.load(r):
+                    name = item.get("name", "")
+                    if name.endswith(".html"):
+                        stems.add(name[:-5])
+        except Exception:
+            pass
+
+    # 날짜 정렬 (최신순), 오늘 날짜 제외
+    sorted_stems = sorted(
+        [s for s in stems if s != TODAY_ISO],
+        reverse=True
+    )[:14]  # 최대 14개
+
+    links = f'<a class="archive-link active" href="index.html">{TODAY_SHORT}</a>\n'
+    for stem in sorted_stems:
+        try:
+            dt = datetime.strptime(stem, "%Y-%m-%d")
+            links += f'  <a class="archive-link" href="archive/{stem}.html">{dt.strftime("%m/%d")}</a>\n'
         except Exception:
             pass
     return links
@@ -588,14 +614,18 @@ def main():
         charts = load_chart_data()
         print(f"차트 데이터 로드 완료 (최근 갱신: {charts.get('updated','?')})")
 
-    # (b) 오늘 dashboard.html → archive/ 에 백업
+    # (b) 현재 index.html → archive/ 에 백업 (GitHub Actions: index.html, 로컬: dashboard.html)
     archive_dir = THIS_DIR / "archive"
     archive_dir.mkdir(exist_ok=True)
-    src = THIS_DIR / "dashboard.html"
+    src = THIS_DIR / "index.html"
+    if not src.exists():
+        src = THIS_DIR / "dashboard.html"
     if src.exists():
         dst = archive_dir / f"{TODAY_ISO}.html"
         dst.write_bytes(src.read_bytes())
         print(f"아카이브 저장: {dst.name}")
+    else:
+        print("[경고] 아카이브할 현재 파일 없음")
 
     # (c) Claude로 뉴스·종목 데이터 수집
     data = fetch_data(client)
