@@ -12,6 +12,7 @@ import logging
 import os
 import sys
 import urllib.request
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -69,6 +70,41 @@ PORTFOLIO = {
     "국내주식": ["SK하이닉스(000660)", "삼성전자(005930)", "삼성전기(009150)", "현대자동차(005380)", "에이피알(278470)", "삼양식품(003230)"],
     "미국주식": ["테슬라(TSLA)", "알파벳(GOOGL)"],
 }
+
+
+# ══════════════════════════════════════════════════════════════════
+# 실시간 시장 데이터 (Yahoo Finance — AI 아님, 실제 API)
+# ══════════════════════════════════════════════════════════════════
+def _yf_price(symbol: str) -> float | None:
+    """Yahoo Finance에서 현재가 1개 조회"""
+    try:
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?interval=1d&range=2d"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.load(r)
+        closes = data["chart"]["result"][0]["indicators"]["quote"][0]["close"]
+        # None 제거 후 마지막 값
+        vals = [v for v in closes if v is not None]
+        return round(vals[-1], 2) if vals else None
+    except Exception as e:
+        log.warning("Yahoo Finance 조회 실패 %s: %s", symbol, e)
+        return None
+
+def fetch_market_data() -> dict:
+    """코스피·환율·보유종목 현재가를 실제 API에서 가져옴"""
+    print("시장 데이터 조회 중 (Yahoo Finance)...")
+    return {
+        "kospi":   _yf_price("^KS11"),        # 코스피 지수
+        "usdkrw":  _yf_price("KRW=X"),        # 원달러 환율
+        "hynix":   _yf_price("000660.KS"),    # SK하이닉스
+        "samsung": _yf_price("005930.KS"),    # 삼성전자
+        "semec":   _yf_price("009150.KS"),    # 삼성전기
+        "hyundai": _yf_price("005380.KS"),    # 현대자동차
+        "apr":     _yf_price("278470.KS"),    # 에이피알
+        "samyang": _yf_price("003230.KS"),    # 삼양식품
+        "tsla":    _yf_price("TSLA"),         # 테슬라
+        "googl":   _yf_price("GOOGL"),        # 알파벳
+    }
 
 
 # ── 차트 데이터 (chart_data.json 에서 로드, 매월 1일 갱신) ────────
@@ -189,6 +225,7 @@ PROMPT = f"""오늘 날짜: {TODAY_KR} ({TODAY_ISO})
 2. 증권가 시각: 주가·목표가·실적·밸류에이션 관점에서 해석.
 3. 최신성: 오늘~이번 주 발행 자료 우선. 오래된 내용이면 날짜미확인 처리.
 4. 구체성: 수치는 반드시 원문 그대로 인용.
+   코스피 지수·환율·종목 주가는 절대 직접 언급하지 말 것 (별도 API로 처리).
 5. 출처: 증권사 리포트·한국경제·매경·파이낸셜뉴스·연합인포맥스·Reuters 우선.
    source_url은 반드시 해당 기사의 직접 URL. 홈페이지·카테고리 URL 절대 금지.
 6. 종목별 검색: 각 종목마다 ① 목표가 변경 ② 실적 ③ 섹터 이슈를 개별 검색.
@@ -382,7 +419,13 @@ def build_archive_links() -> str:
     return links
 
 
-def build_html(data: dict, charts: dict) -> str:
+def _fmt(v, unit="", decimals=0):
+    if v is None: return "—"
+    fmt = f"{v:,.{decimals}f}"
+    return f"{fmt}{unit}"
+
+def build_html(data: dict, charts: dict, market: dict | None = None) -> str:
+    market = market or {}
     r   = charts["rate"]
     m2  = charts["m2"]
     apt = charts["apt"]
@@ -455,6 +498,19 @@ def build_html(data: dict, charts: dict) -> str:
   </div>
   <div class="header-right">skstmfflago-ops</div>
 </header>
+<div style="background:#12152a;border-bottom:1px solid var(--border);padding:6px 28px;display:flex;gap:20px;overflow-x:auto;scrollbar-width:none;font-size:11px;align-items:center;">
+  <span style="color:var(--sub);flex-shrink:0;">실시간(전일종가)</span>
+  <span style="flex-shrink:0;">🇰🇷 코스피 <b style="color:#4f8ef7">{_fmt(market.get('kospi'))}</b></span>
+  <span style="flex-shrink:0;">💱 원달러 <b style="color:#f0b429">{_fmt(market.get('usdkrw'))}원</b></span>
+  <span style="flex-shrink:0;">SK하이닉스 <b style="color:#6fe0b0">{_fmt(market.get('hynix'))}원</b></span>
+  <span style="flex-shrink:0;">삼성전자 <b style="color:#6fe0b0">{_fmt(market.get('samsung'))}원</b></span>
+  <span style="flex-shrink:0;">삼성전기 <b style="color:#6fe0b0">{_fmt(market.get('semec'))}원</b></span>
+  <span style="flex-shrink:0;">현대차 <b style="color:#6fe0b0">{_fmt(market.get('hyundai'))}원</b></span>
+  <span style="flex-shrink:0;">에이피알 <b style="color:#6fe0b0">{_fmt(market.get('apr'))}원</b></span>
+  <span style="flex-shrink:0;">삼양식품 <b style="color:#6fe0b0">{_fmt(market.get('samyang'))}원</b></span>
+  <span style="flex-shrink:0;">TSLA <b style="color:#b07ef7">${_fmt(market.get('tsla'),decimals=2)}</b></span>
+  <span style="flex-shrink:0;">GOOGL <b style="color:#b07ef7">${_fmt(market.get('googl'),decimals=2)}</b></span>
+</div>
 
 <div class="archive-bar">
   <span class="archive-label">이전 날짜:</span>
@@ -627,8 +683,11 @@ def main():
     else:
         print("[경고] 아카이브할 현재 파일 없음")
 
-    # (c) Claude로 뉴스·종목 데이터 수집
-    data = fetch_data(client)
+    # (c) 실시간 시장 데이터 (Yahoo Finance — 100% 실제값)
+    market = fetch_market_data()
+    print(f"시장 데이터: 코스피={market.get('kospi')} 환율={market.get('usdkrw')}")
+
+    # (d) Claude로 뉴스·종목 데이터 수집
     print(
         f"수집 완료 — 뉴스 {len(data.get('news',[]))} / "
         f"MZ {len(data.get('mz_trends',[]))} / "
@@ -637,7 +696,7 @@ def main():
     )
 
     # (d) HTML 생성 & 저장
-    html = build_html(data, charts)
+    html = build_html(data, charts, market)
     (THIS_DIR / "dashboard.html").write_text(html, encoding="utf-8")
     print("dashboard.html 저장 완료")
     log.info("dashboard.html 저장 완료")
