@@ -747,13 +747,15 @@ def main():
         sys.exit("ANTHROPIC_API_KEY 없음")
     client = Anthropic(api_key=ANTHROPIC_KEY)
 
-    # (a) 차트 데이터 로드 (매월 1일에만 API 갱신)
-    if TODAY.day == 1:
+    # (a) 차트 데이터 로드 (매월 1일, 이번 달 미갱신 시에만 API 갱신)
+    existing_charts = load_chart_data()
+    current_month   = TODAY.strftime("%Y-%m")
+    if TODAY.day == 1 and existing_charts.get("updated") != current_month:
         charts = safe_fetch_chart_data(client)
         if CHART_DATA_FILE.exists():
             put_github_file("chart_data.json", CHART_DATA_FILE)
     else:
-        charts = load_chart_data()
+        charts = existing_charts
         print(f"차트 데이터 로드 완료 (최근 갱신: {charts.get('updated','?')})")
 
     # (b) 현재 index.html → archive/ 에 백업 (GitHub Actions: index.html, 로컬: dashboard.html)
