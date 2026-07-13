@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Dashboard – 2026.07.13</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--news:#4f8ef7;--mz:#f76f8e;--ai:#6fe0b0;--econ:#f0b429;--stock:#b07ef7;--text:#e8eaf6;--sub:#8b90b0;--tag:#2a2f4a;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:14px;line-height:1.6;}
+  header{background:linear-gradient(135deg,#1a1d27,#12152a);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .logo{font-size:19px;font-weight:800;letter-spacing:-.5px;}.logo span{color:#4f8ef7;}
+  .header-center{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .date-badge{background:var(--tag);border:1px solid var(--border);border-radius:20px;padding:3px 13px;font-size:12px;color:var(--sub);}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:#6fe0b0;display:inline-block;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .header-right{font-size:11px;color:var(--sub);}
+  .archive-bar{background:#12152a;border-bottom:1px solid var(--border);padding:8px 28px;display:flex;align-items:center;gap:10px;overflow-x:auto;scrollbar-width:none;}
+  .archive-bar::-webkit-scrollbar{display:none;}
+  .archive-label{font-size:11px;color:var(--sub);white-space:nowrap;flex-shrink:0;}
+  .archive-link{font-size:11px;padding:3px 10px;border-radius:12px;text-decoration:none;white-space:nowrap;flex-shrink:0;border:1px solid var(--border);color:var(--sub);transition:all .15s;}
+  .archive-link:hover{border-color:#4f8ef7;color:#4f8ef7;}.archive-link.active{background:#4f8ef7;color:#fff;border-color:#4f8ef7;}
+  .container{max-width:1440px;margin:0 auto;padding:22px 28px;}
+  .grid-3{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:18px;align-items:start;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;}
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .section-header{padding:13px 18px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+  .section-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+  .news .section-icon{background:rgba(79,142,247,.15);}.mz .section-icon{background:rgba(247,111,142,.15);}.ai .section-icon{background:rgba(111,224,176,.15);}.econ .section-icon{background:rgba(240,180,41,.15);}.stock .section-icon{background:rgba(176,126,247,.15);}
+  .section-title{font-size:13.5px;font-weight:700;}
+  .news .section-title{color:var(--news);}.mz .section-title{color:var(--mz);}.ai .section-title{color:var(--ai);}.econ .section-title{color:var(--econ);}.stock .section-title{color:var(--stock);}
+  .section-count{margin-left:auto;background:var(--tag);border-radius:10px;padding:2px 9px;font-size:11px;color:var(--sub);}
+  .card{padding:13px 18px;border-bottom:1px solid var(--border);transition:background .15s;}.card:last-child{border-bottom:none;}.card:hover{background:var(--surface2);}
+  .card-title{font-size:13px;font-weight:700;line-height:1.4;margin-bottom:5px;display:flex;align-items:flex-start;gap:7px;}
+  .card-num{font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px;flex-shrink:0;margin-top:2px;}
+  .news .card-num{background:rgba(79,142,247,.2);color:var(--news);}.mz .card-num{background:rgba(247,111,142,.2);color:var(--mz);}.ai .card-num{background:rgba(111,224,176,.2);color:var(--ai);}
+  .card-body{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:7px;}
+  .card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;}
+  .card-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+  .tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:var(--tag);color:var(--sub);}
+  .news .tag{border-left:2px solid var(--news);}.mz .tag{border-left:2px solid var(--mz);}.ai .tag{border-left:2px solid var(--ai);}.stock .tag{border-left:2px solid var(--stock);}
+  .date-chip{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;flex-shrink:0;}
+  .date-today{background:rgba(111,224,176,.2);color:#6fe0b0;border:1px solid rgba(111,224,176,.4);}.date-week{background:rgba(240,180,41,.15);color:#f0b429;border:1px solid rgba(240,180,41,.3);}.date-old{background:var(--tag);color:var(--sub);border:1px solid var(--border);}
+  .source-link{font-size:10px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:2px;opacity:.7;transition:opacity .15s;white-space:nowrap;}.source-link:hover{opacity:1;color:var(--text);}.source-link::before{content:'↗';font-size:9px;}
+  .chart-wrap{padding:14px 18px 18px;}.chart-meta{font-size:10.5px;color:var(--sub);margin-bottom:4px;display:flex;justify-content:space-between;}.chart-note{font-size:9.5px;color:#555a7a;margin-top:6px;}
+  canvas{max-height:170px;}
+  .divider{text-align:center;padding:14px 0 2px;font-size:11px;color:var(--sub);letter-spacing:.06em;font-weight:600;}.divider span{background:var(--tag);padding:3px 14px;border-radius:10px;}
+  .stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:18px;}
+  .stock-ticker{font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;background:rgba(176,126,247,.18);color:var(--stock);flex-shrink:0;white-space:nowrap;}
+  .stock-change{font-size:11px;font-weight:700;margin-left:auto;}.stock-up{color:#6fe0b0;}.stock-down{color:#f76f8e;}.stock-flat{color:var(--sub);}
+  .stock-alert{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(247,111,78,.18);color:#f7784e;border:1px solid rgba(247,111,78,.3);flex-shrink:0;}
+  footer{text-align:center;padding:18px;color:var(--sub);font-size:11px;border-top:1px solid var(--border);margin-top:8px;}
+  @media(max-width:900px){.grid-3,.grid-2{grid-template-columns:1fr;}.container{padding:12px 14px;}header{flex-wrap:wrap;gap:8px;}.stock-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Daily<span>Brief</span></div>
+  <div class="header-center">
+    <div class="date-badge">2026년 7월 13일 월요일</div>
+    <span class="live-dot"></span>
+    <span style="font-size:11px;color:var(--sub);">매일 자정 자동 업데이트</span>
+  </div>
+  <div class="header-right">skstmfflago-ops</div>
+</header>
+<div style="background:#12152a;border-bottom:1px solid var(--border);padding:6px 28px;display:flex;gap:20px;overflow-x:auto;scrollbar-width:none;font-size:11px;align-items:center;">
+  <span style="color:var(--sub);flex-shrink:0;">실시간(전일종가)</span>
+  <span style="flex-shrink:0;">🇰🇷 코스피 <b style="color:#4f8ef7">7,476</b></span>
+  <span style="flex-shrink:0;">💱 원달러 <b style="color:#f0b429">1,499원</b></span>
+  <span style="flex-shrink:0;">SK하이닉스 <b style="color:#6fe0b0">2,180,000원</b></span>
+  <span style="flex-shrink:0;">삼성전자 <b style="color:#6fe0b0">285,000원</b></span>
+  <span style="flex-shrink:0;">삼성전기 <b style="color:#6fe0b0">1,584,000원</b></span>
+  <span style="flex-shrink:0;">현대차 <b style="color:#6fe0b0">457,500원</b></span>
+  <span style="flex-shrink:0;">에이피알 <b style="color:#6fe0b0">375,000원</b></span>
+  <span style="flex-shrink:0;">삼양식품 <b style="color:#6fe0b0">1,139,000원</b></span>
+  <span style="flex-shrink:0;">TSLA <b style="color:#b07ef7">$407.76</b></span>
+  <span style="flex-shrink:0;">GOOGL <b style="color:#b07ef7">$357.18</b></span>
+</div>
+
+<div class="archive-bar">
+  <span class="archive-label">이전 날짜:</span>
+  <a class="archive-link active" href="index.html">07/13</a>
+  <a class="archive-link" href="archive/2026-07-12.html">07/12</a>
+  <a class="archive-link" href="archive/2026-07-11.html">07/11</a>
+  <a class="archive-link" href="archive/2026-07-10.html">07/10</a>
+  <a class="archive-link" href="archive/2026-07-09.html">07/09</a>
+  <a class="archive-link" href="archive/2026-07-08.html">07/08</a>
+  <a class="archive-link" href="archive/2026-07-07.html">07/07</a>
+  <a class="archive-link" href="archive/2026-07-06.html">07/06</a>
+  <a class="archive-link" href="archive/2026-07-05.html">07/05</a>
+  <a class="archive-link" href="archive/2026-07-04.html">07/04</a>
+  <a class="archive-link" href="archive/2026-07-03.html">07/03</a>
+  <a class="archive-link" href="archive/2026-07-02.html">07/02</a>
+  <a class="archive-link" href="archive/2026-07-01.html">07/01</a>
+  <a class="archive-link" href="archive/2026-06-30.html">06/30</a>
+  <a class="archive-link" href="archive/2026-06-29.html">06/29</a>
+
+</div>
+
+<div class="container">
+
+<div class="grid-3">
+  <div class="section news">
+    <div class="section-header">
+      <div class="section-icon">📰</div>
+      <div class="section-title">주요 뉴스</div>
+      <div class="section-count">7</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title"><span class="card-num">01</span>현대차 노조, 13일부터 부분파업 돌입</div>
+      <div class="card-body">현대차 노조가 13일부터 부분파업에 돌입하며 하투 본격화</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">현대차</span><span class="tag">노조</span><span class="tag">파업</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071202571" target="_blank">한국경제</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">02</span>삼성 용인 클러스터 첫 가동 2년 앞당긴다</div>
+      <div class="card-body">삼성이 용인 반도체 클러스터 첫 가동 시점을 2년 당긴다</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">삼성</span><span class="tag">반도체</span><span class="tag">용인</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071202691" target="_blank">한국경제</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">03</span>현대차, 60년 만에 로봇 야근 전환 결단</div>
+      <div class="card-body">현대차가 로봇 도입으로 야근을 줄이는 60년 만의 중대 결단</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">현대차</span><span class="tag">로봇</span><span class="tag">임금체계</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071202811" target="_blank">한국경제</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">04</span>네이버·두나무 통합, 특금법 심사가 변수</div>
+      <div class="card-body">규제 심사대 오르는 특금법이 네이버·두나무 통합 운명 좌우</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">네이버</span><span class="tag">두나무</span><span class="tag">특금법</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/202607129984i" target="_blank">한국경제</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">05</span>최태원, 맞춤형 칩 육성과 액면분할 검토</div>
+      <div class="card-body">최태원 회장이 맞춤형 칩 육성과 액면분할 검토 방침 밝혀</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">SK</span><span class="tag">최태원</span><span class="tag">반도체</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071202661" target="_blank">한국경제</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">06</span>연말 기준금리 3% 전망에 영끌족 공포</div>
+      <div class="card-body">전문가들이 연말 기준금리 3% 전망하며 영끌족 불안 고조</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">금리</span><span class="tag">부동산</span><span class="tag">대출</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071202551" target="_blank">한국경제</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">07</span>친환경차 판매 비중 사상 첫 50% 돌파</div>
+      <div class="card-body">국내 친환경차 판매 비중이 사상 처음으로 50%를 돌파했다</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">친환경차</span><span class="tag">자동차</span><span class="tag">전기차</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071201811" target="_blank">한국경제</a>
+      </div>
+    </div>
+  </div>
+  <div class="section mz">
+    <div class="section-header">
+      <div class="section-icon">💡</div>
+      <div class="section-title">마케팅 · MZ 트렌드</div>
+      <div class="section-count">1</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title"><span class="card-num">01</span>외국인도 반한 MZ 맛집, 일본서도 생각날 맛</div>
+      <div class="card-body">외국인도 반한 MZ세대 줄 서는 음식, 일본 가서도 생각날 정도</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">MZ세대</span><span class="tag">맛집</span><span class="tag">트렌드</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/202607107307H" target="_blank">한국경제</a>
+      </div>
+    </div>
+  </div>
+  <div class="section ai">
+    <div class="section-header">
+      <div class="section-icon">🤖</div>
+      <div class="section-title">AI 트렌드</div>
+      <div class="section-count">7</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title"><span class="card-num">01</span>오픈AI 새 모델, 50년 수학난제 1시간에 풀어</div>
+      <div class="card-body">오픈AI 신규 모델이 50년 된 수학 난제를 1시간 만에 해결</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">오픈AI</span><span class="tag">GPT</span><span class="tag">수학</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071202641" target="_blank">한국경제IT</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">02</span>오픈AI, 가족 경험 위한 제품 매니저 채용</div>
+      <div class="card-body">ChatGPT가 가족·돌봄 대상 경험 구축 위한 전담 인력 채용 중</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">오픈AI</span><span class="tag">ChatGPT</span><span class="tag">채용</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://techcrunch.com/2026/07/11/openai-bets-on-families-as-chatgpt-goes-deeper-into-households/" target="_blank">TechCrunch AI</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">03</span>메타·스페이스X, 10분의1 가격으로 반격</div>
+      <div class="card-body">메타·스페이스X가 10분의1 가격으로 중국산 AI 대체 시도</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">메타</span><span class="tag">스페이스X</span><span class="tag">AI</span><span class="date-chip date-today">07/11</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/202607107442i" target="_blank">한국경제IT</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">04</span>메타, 논란의 인스타그램 AI 기능 제거</div>
+      <div class="card-body">메타가 백래시 이후 인스타그램의 논란 AI 기능을 삭제했다</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">메타</span><span class="tag">인스타그램</span><span class="tag">AI</span><span class="date-chip date-today">07/11</span></div>
+        <a class="source-link" href="https://techcrunch.com/2026/07/10/meta-removes-controversial-ai-feature-on-instagram-after-backlash/" target="_blank">TechCrunch AI</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">05</span>챗GPT 답변에 광고 노출, 사기성 마케팅 주의</div>
+      <div class="card-body">챗GPT 답변에 광고가 노출되며 사기성 마케팅 우려 제기돼</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">챗GPT</span><span class="tag">광고</span><span class="tag">마케팅</span><span class="date-chip date-today">07/11</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071085011" target="_blank">한국경제IT</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">06</span>애플, 오픈AI를 영업비밀 절도 혐의로 고소</div>
+      <div class="card-body">애플이 오픈AI 고위 경영진의 영업비밀 절도 혐의로 소송 제기</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">애플</span><span class="tag">오픈AI</span><span class="tag">소송</span><span class="date-chip date-today">07/11</span></div>
+        <a class="source-link" href="https://techcrunch.com/2026/07/10/apple-sues-openai-over-alleged-trade-secret-theft/" target="_blank">TechCrunch AI</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-num">07</span>SK하이닉스, 미국 역대 최대 외국기업 IPO</div>
+      <div class="card-body">SK하이닉스가 265억달러 규모 미국 최대 외국기업 IPO 달성</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">SK하이닉스</span><span class="tag">IPO</span><span class="tag">미국</span><span class="date-chip date-today">07/11</span></div>
+        <a class="source-link" href="https://techcrunch.com/2026/07/10/sk-hynix-raises-26-5b-in-the-biggest-foreign-ipo-in-us-history-is-urged-to-build-new-us-fabs/" target="_blank">TechCrunch AI</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"><span>💼 보유 주식 주요 이슈</span></div>
+<div class="stock-grid">
+
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">🔵</div>
+      <div class="section-title">SK하이닉스</div>
+      <span class="stock-ticker">000660</span>
+      <span class="stock-change stock-flat">미국 데뷔 후 피크아웃 논란</span>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;SK하이닉스 미국 데뷔, 메모리 피크아웃 논란</div>
+      <div class="card-body">SK하이닉스의 화려한 미국 데뷔 이후 메모리 피크아웃 논란 거세져</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">SK하이닉스</span><span class="tag">IPO</span><span class="tag">메모리</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/202607129717i" target="_blank">한국경제</a>
+      </div>
+    </div>
+  </div>
+  <div class="section stock">
+    <div class="section-header">
+      <div class="section-icon">🚗</div>
+      <div class="section-title">현대자동차</div>
+      <span class="stock-ticker">005380</span>
+      <span class="stock-change stock-down">노조 부분파업 돌입</span>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="stock-alert">🔥 중요</span>&nbsp;현대차 노조, 13일부터 부분파업 시작</div>
+      <div class="card-body">현대차 노조가 13일부터 부분파업에 돌입하며 하투 본격화</div>
+      <div class="card-footer">
+        <div class="card-tags"><span class="tag">현대차</span><span class="tag">노조</span><span class="tag">파업</span><span class="date-chip date-today">어제</span></div>
+        <a class="source-link" href="https://www.hankyung.com/article/2026071202571" target="_blank">한국경제</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"><span>📊 경제 지표 (월별)</span></div>
+<div class="grid-2">
+  <div class="section econ">
+    <div class="section-header"><div class="section-icon">🏦</div><div class="section-title">한국 · 미국 기준금리 추이</div></div>
+    <div class="chart-wrap">
+      <div class="chart-meta"><span>단위: %</span><span>25.01 – 26.05</span></div>
+      <canvas id="rateChart"></canvas>
+      <div class="chart-note">※ 한국은행·연준 공시 기준. 회의 미개최 월은 직전 결정값 유지.</div>
+    </div>
+  </div>
+  <div class="section econ">
+    <div class="section-header"><div class="section-icon">💰</div><div class="section-title">한국 총통화량 M2</div></div>
+    <div class="chart-wrap">
+      <div class="chart-meta"><span>단위: 조원</span><span>25.01 – 26.03</span></div>
+      <canvas id="m2Chart"></canvas>
+      <div class="chart-note">※ 한국은행 발표 기준. 최신 월 수치는 약 2개월 발표 시차.</div>
+    </div>
+  </div>
+</div>
+<div class="grid-2">
+  <div class="section econ">
+    <div class="section-header"><div class="section-icon">🏠</div><div class="section-title">서울 아파트 매매거래량</div></div>
+    <div class="chart-wrap">
+      <div class="chart-meta"><span>단위: 건</span><span>25.01 – 26.04</span></div>
+      <canvas id="aptChart"></canvas>
+      <div class="chart-note">※ 국토부 실거래가 공개시스템 기준. 매매거래량만 집계 (전월세 제외).</div>
+    </div>
+  </div>
+  <div class="section econ">
+    <div class="section-header"><div class="section-icon">📈</div><div class="section-title">코스피 주간 추이</div></div>
+    <div class="chart-wrap">
+      <div class="chart-meta"><span>단위: 포인트</span><span>03/09 – 05/27</span></div>
+      <canvas id="kospiChart"></canvas>
+      <div class="chart-note">※ 한국거래소 종가 기준 (주봉).</div>
+    </div>
+  </div>
+</div>
+
+</div>
+<footer>DailyBrief · 2026.07.13 · 매일 자정 자동 업데이트 · <a href="https://skstmfflago-ops.github.io/daily-dashboard/" style="color:var(--sub);text-decoration:none;">skstmfflago-ops.github.io/daily-dashboard</a></footer>
+
+<script>
+const G={color:'#8b90b0',grid:'rgba(46,50,80,.45)',font:{size:10}};
+const ax={x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},y:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}}};
+new Chart(document.getElementById('rateChart'),{type:'line',data:{labels:["25.01", "25.02", "25.03", "25.04", "25.05", "25.06", "25.07", "25.08", "25.09", "25.10", "25.11", "25.12", "26.01", "26.02", "26.03", "26.04", "26.05"],datasets:[
+  {label:'한국 기준금리',data:[3.0, 2.75, 2.75, 2.75, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5],borderColor:'#6fe0b0',backgroundColor:'rgba(111,224,176,.08)',borderWidth:2,pointRadius:3,tension:0.1,fill:true},
+  {label:'미국 기준금리',data:[4.38, 4.38, 4.38, 4.38, 4.38, 4.25, 4.0, 3.88, 3.75, 3.75, 3.75, 3.63, 3.63, 3.63, 3.63, 3.63, 3.63],borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.06)',borderWidth:2,pointRadius:3,tension:0.1,fill:true}
+]},options:{plugins:{legend:{labels:{color:G.color,font:G.font,boxWidth:10,padding:12}}},scales:ax}});
+new Chart(document.getElementById('m2Chart'),{type:'line',data:{labels:["25.01", "25.02", "25.03", "25.04", "25.05", "25.06", "25.07", "25.08", "25.09", "25.10", "25.11", "25.12", "26.01", "26.02", "26.03"],datasets:[{label:'M2(조원)',data:[4280, 4305, 4325, 4348, 4368, 4390, 4408, 4422, 4430, 4480, 4510, 4541, 4565, 4582, 4600],borderColor:'#f0b429',backgroundColor:'rgba(240,180,41,.1)',borderWidth:2,pointRadius:3,tension:0.4,fill:true}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},y:{ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},grid:{color:G.grid}}}}});
+new Chart(document.getElementById('aptChart'),{type:'bar',data:{labels:["25.01", "25.02", "25.03", "25.04", "25.05", "25.06", "25.07", "25.08", "25.09", "25.10", "25.11", "25.12", "26.01", "26.02", "26.03", "26.04"],datasets:[{label:'매매거래량(건)',data:[3355, 4766, 4742, 9200, 11000, 9521, 8500, 8500, 9000, 8663, 2372, 3800, 8200, 9500, 7800, 7521],backgroundColor:'rgba(240,180,41,.55)',borderColor:'#f0b429',borderWidth:1,borderRadius:3}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:G.color,font:G.font},grid:{color:G.grid}},y:{ticks:{color:G.color,font:G.font,callback:v=>v.toLocaleString()},grid:{color:G.grid}}}}});
+new Chart(document.getElementById('kospiChart'),{type:'line',data:{labels:["03/09", "03/16", "03/23", "03/30", "04/06", "04/13", "04/21", "04/27", "05/03", "05/11", "05/15", "05/27"],datasets:[{label:'코스피',data:[5640, 5750, 5840, 5930, 5980, 6020, 6050, 6200, 6700, 7800, 8000, 8228],borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.1)',borderWidth:2,pointRadius:3,tension:0.4,fill:true}]},options:{plugins:{legend:{display:false}},scales:ax}});
+</script>
+</body>
+</html>
